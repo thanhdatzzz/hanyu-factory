@@ -586,11 +586,11 @@ body {
 // ==========================================
 const VALID_KEYS = ['DAT09VIP']; 
 
-function checkLock() {
-  const isUnlocked = localStorage.getItem('hgf_v4_unlocked');
-  if (isUnlocked === 'true') {
-    document.getElementById('lock-screen').style.display = 'none';
-  }
+// Chỉ khởi động App khi đã mở khóa thành công
+const isUnlocked = localStorage.getItem('hgf_v4_unlocked');
+if (isUnlocked === 'true') {
+  document.getElementById('lock-screen').style.display = 'none';
+  setTimeout(init, 100); // Khởi động App
 }
 
 function unlockApp() {
@@ -598,6 +598,7 @@ function unlockApp() {
   if (VALID_KEYS.includes(input)) {
     localStorage.setItem('hgf_v4_unlocked', 'true');
     document.getElementById('lock-screen').style.display = 'none';
+    init(); // Khởi động App
   } else {
     alert('Mã kích hoạt không đúng. Vui lòng kiểm tra lại!');
   }
@@ -1791,20 +1792,28 @@ let sentences = [
 
 let learnMode = 'vocab';
 let currentSection = 'all';
-// Lấy dữ liệu cũ từ bộ nhớ trình duyệt ra (nếu có)
-let savedStats = JSON.parse(localStorage.getItem('hgf_v4_stats') || '{"score":0, "total":0, "streak":0, "dailyGoal":15}');
+
+// Hàm bọc thép để chống sập App khi dữ liệu điện thoại bị lỗi (Khắc phục Bug 1)
+function safeGetJSON(key, defaultObj) {
+  try {
+    const val = localStorage.getItem(key);
+    if (val && val !== 'undefined' && val !== 'null') return JSON.parse(val);
+  } catch (e) { console.warn('Lỗi đọc data:', key, e); }
+  return defaultObj;
+}
+
+// Gọi dữ liệu an toàn
+let savedStats = safeGetJSON('hgf_v4_stats', {score:0, total:0, streak:0, dailyGoal:15});
 let dailyGoal = savedStats.dailyGoal || 15;
 let score = savedStats.score || 0;
 let total = savedStats.total || 0;
 let streak = savedStats.streak || 0;
 
-// Lấy lại toàn bộ tiến độ từ vựng (Quan trọng nhất)
-let wordProgress = JSON.parse(localStorage.getItem('hgf_v4_progress') || '{}');
+let wordProgress = safeGetJSON('hgf_v4_progress', {});
+let blockProgress = safeGetJSON('hgf_v4_blocks', {});
 
 let current = null;
-let blockSize = 15;
-// Lưu trữ khối hiện tại của từng chủ đề
-let blockProgress = JSON.parse(localStorage.getItem('hgf_v4_blocks') || '{}');
+let blockSize = parseInt(localStorage.getItem('hgf_v4_blockSize')) || 15;
 
 function getCurrentBlock() { 
   const key = `${learnMode}_${currentSection}`;
@@ -1836,10 +1845,10 @@ function recordAnswer(item, correct) {
   
   if (correct) {
     p.level = Math.min(6, p.level + 1);
-    p.isMistake = false; // Trả lời đúng -> Xóa án phạt
+    p.isMistake = false; 
   } else {
     p.level = Math.max(0, p.level - 2);
-    p.isMistake = true;  // Trả lời sai -> Cho vào sổ đen
+    p.isMistake = true; 
   }
   
   const today = todayStr();
@@ -1861,37 +1870,31 @@ function pickVocabWord(pool) {
   const endIndex = startIndex + blockSize;
   const currentBlockWords = pool.slice(startIndex, endIndex);
 
-  // Trường hợp đã học hết sạch các khối trong chủ đề này
   if (currentBlockWords.length === 0) {
     document.getElementById('feedback').textContent = '🎉 Bạn đã học hết tất cả các khối trong chủ đề này!';
     document.getElementById('feedback').className = 'feedback ok';
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  // Lọc ra các từ trong Khối CHƯA đạt Level 6 (Chưa thuộc hoàn toàn)
   const unmasteredWords = currentBlockWords.filter(v => {
     const p = wordProgress[v.hanzi];
     return !p || p.level < 6;
   });
 
-  // TÍNH NĂNG TỰ NEXT KHỐI: Nếu đã thuộc hết (Level 6) toàn bộ từ trong khối này
 if (unmasteredWords.length === 0) {
     const totalBlocks = Math.ceil(pool.length / blockSize);
     if (currentBlockIndex + 1 < totalBlocks) {
       alert(`🎉 Chúc mừng! Bạn đã chinh phục hoàn toàn Khối ${currentBlockIndex + 1} (Điểm 6/6).\nHệ thống sẽ tự động chuyển sang Khối ${currentBlockIndex + 2}!`);
       setCurrentBlock(currentBlockIndex + 1);
       renderBlockSelector();
-      return pickVocabWord(pool); // Gọi lại để lấy từ của khối mới
+      return pickVocabWord(pool); 
     } else {
-      // Đã học xong khối cuối cùng của chủ đề
       document.getElementById('feedback').textContent = '🏆 XUẤT SẮC! Bạn đã master toàn bộ chủ đề này!';
       document.getElementById('feedback').className = 'feedback ok';
-      // Random lại toàn bộ pool để luyện phản xạ
       return pool[Math.floor(Math.random() * pool.length)]; 
     }
   }
 
-  // Chọn từ để học: Ưu tiên nhả các từ có Level thấp nhất trong Khối ra hỏi trước
   unmasteredWords.sort((a, b) => {
     const levelA = wordProgress[a.hanzi]?.level || 0;
     const levelB = wordProgress[b.hanzi]?.level || 0;
@@ -1903,16 +1906,12 @@ if (unmasteredWords.length === 0) {
 
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
+
 function currentPool() {
   const data = learnMode === 'sentence' ? sentences : vocab;
-  
   if (currentSection === 'all') return data;
-  
-  // Nếu đang ở mục Hay sai
   if (currentSection === 'mistakes') {
     const mistakesPool = data.filter(v => wordProgress[v.hanzi]?.isMistake);
-    
-    // Nếu không có từ nào sai, báo tin vui và lấy tạm data tổng
     if (mistakesPool.length === 0) {
       document.getElementById('feedback').textContent = '🎉 Tuyệt vời! Bạn không nợ từ sai nào.';
       document.getElementById('feedback').className = 'feedback ok';
@@ -1920,9 +1919,9 @@ function currentPool() {
     }
     return mistakesPool;
   }
-  
   return data.filter(x => x.s === currentSection);
 }
+
 function isNewWord(item) {
   const p = wordProgress[item.hanzi];
   return p && p.firstSeen === todayStr() && p.level < 1;
@@ -2301,9 +2300,9 @@ function applyPinyinState() {
 
 function togglePinyin() {
   isPinyinVisible = !isPinyinVisible;
-  // Lưu trạng thái vào bộ nhớ
   localStorage.setItem('hgf_v4_pinyin', isPinyinVisible ? 'visible' : 'hidden');
-  applyPinyinState(); // Gọi luôn hàm áp dụng UI cho gọn
+  applyPinyinState(); 
+  closeSettingsModal(); // Thêm dòng này để bấm phát menu cụp xuống luôn, nhìn thấy kết quả ngay (Khắc phục Bug 2)
 }
 // ==========================================
 // 📊 BIỂU ĐỒ THỐNG KÊ (CHART.JS)
