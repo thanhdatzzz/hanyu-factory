@@ -1947,6 +1947,7 @@ function init() {
   renderBlockSelector(); // <-- Nạp danh sách khối
   updateGoalCard();
   updateVocabCount();
+  applyPinyinState();
   nextQuestion();
 }
 function buildSectionTabs() {
@@ -2300,19 +2301,9 @@ function applyPinyinState() {
 
 function togglePinyin() {
   isPinyinVisible = !isPinyinVisible;
-  const btn = document.getElementById('btn-pinyin');
-  const pinyinEl = document.getElementById('pinyin-display');
-  
-  if (isPinyinVisible) {
-    btn.innerHTML = '👁️ Ẩn Pinyin';
-    pinyinEl.style.opacity = '1';
-    pinyinEl.style.visibility = 'visible';
-  } else {
-    btn.innerHTML = '🙈 Hiện Pinyin';
-    // Đổi opacity thành 0 thay vì display:none để không bị giật khung hình
-    pinyinEl.style.opacity = '0';
-    pinyinEl.style.visibility = 'hidden'; 
-  }
+  // Lưu trạng thái vào bộ nhớ
+  localStorage.setItem('hgf_v4_pinyin', isPinyinVisible ? 'visible' : 'hidden');
+  applyPinyinState(); // Gọi luôn hàm áp dụng UI cho gọn
 }
 // ==========================================
 // 📊 BIỂU ĐỒ THỐNG KÊ (CHART.JS)
