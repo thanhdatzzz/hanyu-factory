@@ -1791,11 +1791,16 @@ let sentences = [
 
 let learnMode = 'vocab';
 let currentSection = 'all';
-let dailyGoal = 15;
-let score = 0;
-let total = 0;
-let streak = 0;
-let wordProgress = {};
+// Lấy dữ liệu cũ từ bộ nhớ trình duyệt ra (nếu có)
+let savedStats = JSON.parse(localStorage.getItem('hgf_v4_stats') || '{"score":0, "total":0, "streak":0, "dailyGoal":15}');
+let dailyGoal = savedStats.dailyGoal || 15;
+let score = savedStats.score || 0;
+let total = savedStats.total || 0;
+let streak = savedStats.streak || 0;
+
+// Lấy lại toàn bộ tiến độ từ vựng (Quan trọng nhất)
+let wordProgress = JSON.parse(localStorage.getItem('hgf_v4_progress') || '{}');
+
 let current = null;
 let blockSize = 15;
 // Lưu trữ khối hiện tại của từng chủ đề
