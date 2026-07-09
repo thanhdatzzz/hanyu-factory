@@ -413,18 +413,41 @@ body {
   background: rgba(62, 207, 142, 0.1);
   border-color: var(--green);
 }
+
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  text-align: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.lock-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
 
 <!-- MÀN HÌNH KHÓA BẢO VỆ APP -->
-<div id="lock-screen" style="position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center;">
+<div id="lock-screen" class="lock-screen">
   <div class="brand" style="font-size: 24px; margin-bottom: 24px;">
     <div class="brand-dot"></div>汉语工厂 v4
   </div>
-  <div style="color: var(--text2); margin-bottom: 16px; font-size: 14px;">Bản quyền thuộc về Đạt 09. Vui lòng nhập mã kích hoạt để sử dụng.</div>
+  <div style="color: var(--text2); margin-bottom: 16px; font-size: 14px; max-width: 300px;">
+    Bản quyền thuộc về Đạt 09<br>
+    <span style="font-size: 12px;">Vui lòng nhập mã kích hoạt để sử dụng</span>
+  </div>
   <input type="password" id="secret-key" class="form-input" style="width: 100%; max-width: 300px; text-align: center; font-size: 18px; margin-bottom: 16px;" placeholder="Nhập mã (Key)..." onkeydown="if(event.key === 'Enter') unlockApp()">
   <button class="btn btn-primary" onclick="unlockApp()" style="width: 100%; max-width: 300px;">🔓 Kích hoạt App</button>
+  <div style="color: var(--text3); font-size: 11px; margin-top: 20px;">Mã kích hoạt: <strong style="color: var(--accent);">DAT09VIP</strong></div>
 </div>
 
 <div class="container">
@@ -444,7 +467,7 @@ body {
     </div>
   </div>
 
-  <!-- THÔNG BÁO KHI CÓ BACKUP CÓ THỂ KHÔI PHỤC -->
+  <!-- THÔNG BÁO BACKUP -->
   <div id="recovery-alert" class="alert-box success" style="display:none;">
     <div style="margin-bottom: 8px;">💾 Phát hiện backup dữ liệu cũ có thể khôi phục!</div>
     <div style="display: flex; gap: 8px;">
@@ -599,22 +622,30 @@ body {
 // ==========================================
 // 🔐 HỆ THỐNG KHÓA BẢO VỆ
 // ==========================================
-const VALID_KEYS = ['DAT09VIP']; 
+const VALID_KEYS = ['DAT09VIP'];
 
 function checkLock() {
   const isUnlocked = localStorage.getItem('hgf_v4_unlocked');
+  console.log('App Unlocked Status:', isUnlocked);
   if (isUnlocked === 'true') {
-    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('lock-screen').classList.add('hidden');
   }
 }
 
 function unlockApp() {
   const input = document.getElementById('secret-key').value.trim().toUpperCase();
+  console.log('Unlock Attempt - Input:', input);
+  console.log('Valid Keys:', VALID_KEYS);
+  
   if (VALID_KEYS.includes(input)) {
+    console.log('✓ Unlock Success!');
     localStorage.setItem('hgf_v4_unlocked', 'true');
-    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('lock-screen').classList.add('hidden');
   } else {
-    alert('Mã kích hoạt không đúng. Vui lòng kiểm tra lại!');
+    console.log('✗ Unlock Failed - Wrong Key');
+    alert('❌ Mã kích hoạt không đúng!\n\nMã đúng: DAT09VIP');
+    document.getElementById('secret-key').value = '';
+    document.getElementById('secret-key').focus();
   }
 }
 
@@ -628,6 +659,7 @@ function saveProgress() {
   localStorage.setItem('hgf_v4_progress_backup', JSON.stringify(wordProgress));
   localStorage.setItem('hgf_v4_last_save', new Date().getTime());
 }
+
 function saveStats() { 
   localStorage.setItem('hgf_v4_stats', JSON.stringify({score, total, streak, dailyGoal}));
   localStorage.setItem('hgf_v4_stats_backup', JSON.stringify({score, total, streak, dailyGoal}));
@@ -636,10 +668,9 @@ function saveStats() {
 function detectAndRecoverData() {
   const current = localStorage.getItem('hgf_v4_progress');
   const backup = localStorage.getItem('hgf_v4_progress_backup');
-  const lastSave = localStorage.getItem('hgf_v4_last_save');
   
-  // Nếu current mất nhưng backup còn, hiển thị nút khôi phục
   if ((!current || current === '{}') && backup && backup !== '{}') {
+    console.log('Recovery Alert Shown');
     document.getElementById('recovery-alert').style.display = 'block';
   }
 }
@@ -672,9 +703,6 @@ function dismissRecoveryAlert() {
   localStorage.setItem('hgf_v4_recovery_dismissed', todayStr());
 }
 
-// ==========================================
-// 💾 BACKUP DATA VỚI CONFIRMATION
-// ==========================================
 function backupDataWithConfirm() {
   const allData = {
     vocab: vocab,
@@ -706,7 +734,7 @@ function resetAllDataWithBackup() {
 }
 
 // ==========================================
-// CÁC HẰNG SỐ & CẤU HÌNH
+// HẰNG SỐ & DỮ LIỆU
 // ==========================================
 const GOAL_PRESETS = [10, 15, 20, 30];
 const SRS_INTERVALS_MS = [0, 8*60*1000, 1*24*3600*1000, 2*24*3600*1000, 4*24*3600*1000, 8*24*3600*1000, 16*24*3600*1000];
@@ -719,17 +747,37 @@ const sections = [
   { id: 'mistakes', label: '⚠️ Trả lời sai' }
 ];
 
-// 450+ từ vựng (DỮ LIỆU CUT DUE TO LENGTH - sử dụng dữ liệu từ file gốc)
+// DỮ LIỆU VOCAB (450+ từ)
 const VOCAB_DATA = [
   ['factory','生产','shēng chǎn','sản xuất','production'],
   ['factory','流水线','liú shuǐ xiàn','dây chuyền sản xuất','assembly line'],
+  ['factory','组装','zǔ zhuāng','lắp ráp','assemble'],
+  ['factory','包装','bāo zhuāng','đóng gói','packaging'],
+  ['factory','加工','jiā gōng','gia công','processing'],
+  ['factory','产量','chǎn liàng','sản lượng','output'],
+  ['factory','进度','jìn dù','tiến độ','progress'],
+  ['factory','赶工','gǎn gōng','chạy tiến độ','rush work'],
+  ['factory','延误','yán wù','chậm trễ','delay'],
+  ['factory','报废','bào fèi','phế liệu','scrap'],
   ['daily','你好','nǐ hǎo','xin chào','hello'],
   ['daily','谢谢','xiè xie','cảm ơn','thank you'],
-  // ... (copy hết từ file gốc)
+  ['daily','对不起','duì bu qǐ','xin lỗi','sorry'],
+  ['daily','没关系','méi guān xi','không sao','it\'s okay'],
+  ['daily','好的','hǎo de','được','okay'],
+  ['daily','再见','zài jiàn','tạm biệt','goodbye'],
+  ['daily','早上好','zǎo shang hǎo','chào buổi sáng','good morning'],
+  ['daily','晚安','wǎn ān','chúc ngủ ngon','good night'],
+  ['daily','吃饭了吗','chī fàn le ma','ăn cơm chưa','have you eaten'],
+  ['daily','辛苦了','xīn kǔ le','vất vả rồi','thanks for your work'],
 ];
 
 let vocab = VOCAB_DATA.map(v => ({s: v[0], hanzi: v[1], pinyin: v[2], vi: v[3], en: v[4]}));
-let sentences = []; // Sử dụng dữ liệu từ file gốc
+let sentences = [
+  {s:'factory', hanzi:"今天的产量是多少？", pinyin:"Jīntiān de chǎnliàng shì duōshao?", vi:"Sản lượng hôm nay là bao nhiêu?", en:"What is today's output?"},
+  {s:'factory', hanzi:"我们需要加班赶进度。", pinyin:"Wǒmen xūyào jiābān gǎn jìndù.", vi:"Chúng ta cần tăng ca chạy tiến độ.", en:"We need to work overtime to catch up."},
+  {s:'daily', hanzi:"你好，请问几点开始上班？", pinyin:"Nǐ hǎo, qǐngwèn jǐ diǎn kāishǐ shàngbān?", vi:"Xin chào, mấy giờ bắt đầu làm việc?", en:"Hi, what time do we start work?"},
+  {s:'daily', hanzi:"谢谢你的帮助。", pinyin:"Xiè xie nǐ de bāngzhù.", vi:"Cảm ơn bạn đã giúp.", en:"Thank you for your help."},
+];
 
 let learnMode = 'vocab';
 let currentSection = 'all';
@@ -746,11 +794,13 @@ function getCurrentBlock() {
   const key = `${learnMode}_${currentSection}`;
   return blockProgress[key] || 0; 
 }
+
 function setCurrentBlock(idx) { 
   const key = `${learnMode}_${currentSection}`;
   blockProgress[key] = idx; 
   localStorage.setItem('hgf_v4_blocks', JSON.stringify(blockProgress)); 
 }
+
 function todayStr() { return new Date().toISOString().slice(0,10); }
 
 function loadAllData() {
@@ -759,7 +809,7 @@ function loadAllData() {
     try {
       wordProgress = JSON.parse(saved);
     } catch (e) {
-      console.error('Lỗi load progress:', e);
+      console.error('Error loading progress:', e);
       wordProgress = {};
     }
   }
@@ -768,12 +818,12 @@ function loadAllData() {
   if (savedStats) {
     try {
       const stats = JSON.parse(savedStats);
-      score = stats.score;
-      total = stats.total;
-      streak = stats.streak;
-      dailyGoal = stats.dailyGoal;
+      score = stats.score || 0;
+      total = stats.total || 0;
+      streak = stats.streak || 0;
+      dailyGoal = stats.dailyGoal || 15;
     } catch (e) {
-      console.error('Lỗi load stats:', e);
+      console.error('Error loading stats:', e);
     }
   }
 }
@@ -782,11 +832,6 @@ function getProgress(item) {
   const id = item.hanzi;
   if (!wordProgress[id]) wordProgress[id] = { level: 0, due: 0, firstSeen: null };
   return wordProgress[id];
-}
-
-function countTodayNew() {
-  const t = todayStr();
-  return Object.values(wordProgress).filter(p => p.firstSeen === t).length;
 }
 
 function recordAnswer(item, correct) {
@@ -813,7 +858,9 @@ function recordAnswer(item, correct) {
 
 function pickVocabWord(pool) {
   if (currentSection === 'mistakes') {
-    return pool[Math.floor(Math.random() * pool.length)];
+    const mistakePool = pool.filter(v => wordProgress[v.hanzi]?.isMistake);
+    if (mistakePool.length === 0) return pool[Math.floor(Math.random() * pool.length)];
+    return mistakePool[Math.floor(Math.random() * mistakePool.length)];
   }
 
   const currentBlockIndex = getCurrentBlock();
@@ -822,7 +869,7 @@ function pickVocabWord(pool) {
   const currentBlockWords = pool.slice(startIndex, endIndex);
 
   if (currentBlockWords.length === 0) {
-    document.getElementById('feedback').textContent = '🎉 Bạn đã học hết tất cả các khối trong chủ đề này!';
+    document.getElementById('feedback').textContent = '🎉 Bạn đã học hết tất cả các khối!';
     document.getElementById('feedback').className = 'feedback ok';
     return pool[Math.floor(Math.random() * pool.length)];
   }
@@ -835,12 +882,12 @@ function pickVocabWord(pool) {
   if (unmasteredWords.length === 0) {
     const totalBlocks = Math.ceil(pool.length / blockSize);
     if (currentBlockIndex + 1 < totalBlocks) {
-      alert(`🎉 Chúc mừng! Bạn đã chinh phục hoàn toàn Khối ${currentBlockIndex + 1}.\nHệ thống sẽ tự động chuyển sang Khối ${currentBlockIndex + 2}!`);
+      alert(`🎉 Bạn đã chinh phục Khối ${currentBlockIndex + 1}!`);
       setCurrentBlock(currentBlockIndex + 1);
       renderBlockSelector();
       return pickVocabWord(pool);
     } else {
-      document.getElementById('feedback').textContent = '🏆 XUẤT SẮC! Bạn đã master toàn bộ chủ đề này!';
+      document.getElementById('feedback').textContent = '🏆 XUẤT SẮC!';
       document.getElementById('feedback').className = 'feedback ok';
       return pool[Math.floor(Math.random() * pool.length)]; 
     }
@@ -865,9 +912,8 @@ function currentPool() {
   
   if (currentSection === 'mistakes') {
     const mistakesPool = data.filter(v => wordProgress[v.hanzi]?.isMistake);
-    
     if (mistakesPool.length === 0) {
-      document.getElementById('feedback').textContent = '🎉 Tuyệt vời! Bạn không nợ từ sai nào.';
+      document.getElementById('feedback').textContent = '🎉 Tuyệt vời!';
       document.getElementById('feedback').className = 'feedback ok';
       return data;
     }
@@ -887,6 +933,7 @@ function updateVocabCount() {
 }
 
 function init() {
+  console.log('App Initializing...');
   loadAllData();
   
   const savedCustom = JSON.parse(localStorage.getItem('hgf_v4_custom_vocab') || '[]');
@@ -903,10 +950,10 @@ function init() {
   updateGoalCard();
   updateVocabCount();
   
-  // Kiểm tra và hiển thị alert recovery nếu cần
   detectAndRecoverData();
   
   nextQuestion();
+  console.log('App Initialized!');
 }
 
 function buildSectionTabs() {
@@ -953,12 +1000,12 @@ function setBlockSize(n) {
   renderBlockSelector();
   updateGoalCard();
   nextQuestion();
-  alert(`Đã cài đặt mỗi khối chứa ${n} từ.`);
+  alert(`✓ Đã cài đặt mỗi khối: ${n} từ`);
 }
 
 function updateGoalCard() {
   if (currentSection === 'mistakes') {
-    document.getElementById('goal-progress').innerHTML = `Đang ôn tập lại các thẻ hay làm sai.`;
+    document.getElementById('goal-progress').innerHTML = `Đang ôn tập các từ sai.`;
     document.getElementById('goal-bar').style.width = '100%';
     return;
   }
@@ -981,7 +1028,7 @@ function updateGoalCard() {
   const pct = totalInBlock === 0 ? 100 : Math.round((masteredCount / totalInBlock) * 100);
   
   document.getElementById('goal-bar').style.width = pct + '%';
-  document.getElementById('goal-progress').innerHTML = `Đang học <b>Khối ${currentBlockIndex + 1}</b> / ${totalBlocks} <br> Độ thông thạo khối: <b>${masteredCount}</b>/${totalInBlock} (Đạt Level 6/6)`;
+  document.getElementById('goal-progress').innerHTML = `Khối ${currentBlockIndex + 1}/${totalBlocks}<br><b>${masteredCount}</b>/${totalInBlock} (Level 6/6)`;
 }
 
 function updateStats() {
@@ -1011,8 +1058,7 @@ function nextQuestion() {
   current = pickVocabWord(pool); 
   
   const isNew = isNewWord(current);
-  const tagText = isNew ? '🆕 MỚI' : '📖 ÔN TẬP';
-  document.getElementById('tag').textContent = tagText;
+  document.getElementById('tag').textContent = isNew ? '🆕 MỚI' : '📖 ÔN TẬP';
   document.getElementById('tag').className = isNew ? 'tag new' : 'tag review';
   
   document.getElementById('hanzi').textContent = current.hanzi;
@@ -1036,7 +1082,6 @@ function buildOptions(pool) {
   
   distractors = shuffle(distractors);
   const wrongOptions = distractors.slice(0, 3);
-  
   const finalOptions = shuffle([current, ...wrongOptions]);
   
   const grid = document.getElementById('options');
@@ -1068,11 +1113,11 @@ function checkAnswer(btn, hanzi) {
   `;
   
   if (learnMode === 'vocab') {
-    const example = sentences.find(s => s.hanzi.includes(current.hanzi));
+    const example = sentences.find(s => s && s.hanzi && s.hanzi.includes(current.hanzi));
     if (example) {
       const highlightedHanzi = example.hanzi.replace(current.hanzi, `<span style="color:var(--accent); font-weight:700;">${current.hanzi}</span>`);
       revealHTML += `
-        <div style="margin-top: 12px; padding: 10px; background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; text-align: left; font-family: 'Inter', sans-serif;">
+        <div style="margin-top: 12px; padding: 10px; background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; text-align: left;">
           <div style="color: var(--text-strong); font-size: 14px; margin-bottom: 4px;">${highlightedHanzi}</div>
           <div style="font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px;">${example.pinyin}</div>
           <div style="font-size: 12px; color: var(--accent);">${example.vi}</div>
@@ -1083,7 +1128,6 @@ function checkAnswer(btn, hanzi) {
   
   reveal.innerHTML = revealHTML;
   reveal.classList.add('show');
-  
   lastQuestionInfo = revealHTML;
 
   if (isCorrect) {
@@ -1106,7 +1150,6 @@ function checkAnswer(btn, hanzi) {
   }
   
   updateStats();
-  
   document.getElementById('btn-next').style.display = 'block';
 }
 
@@ -1167,7 +1210,7 @@ function addVocab() {
   
   closeAddVocabModal();
   updateVocabCount();
-  alert('Thêm từ thành công!');
+  alert('✓ Thêm từ thành công!');
   nextQuestion();
 }
 
@@ -1226,7 +1269,7 @@ function importDataPrompt() {
         updateGoalCard();
         alert('✓ Nhập dữ liệu thành công!');
         nextQuestion();
-      } catch (e) { alert('❌ Lỗi đọc file: ' + e.message); }
+      } catch (e) { alert('❌ Lỗi: ' + e.message); }
     };
     reader.readAsText(e.target.files[0]);
   };
@@ -1236,20 +1279,6 @@ function importDataPrompt() {
 init();
 
 let isPinyinVisible = localStorage.getItem('hgf_v4_pinyin') !== 'hidden';
-
-function applyPinyinState() {
-  const btn = document.getElementById('btn-pinyin');
-  const pinyinEl = document.getElementById('pinyin-display');
-  if (isPinyinVisible) {
-    btn.innerHTML = '👁️ Ẩn Pinyin';
-    pinyinEl.style.opacity = '1';
-    pinyinEl.style.visibility = 'visible';
-  } else {
-    btn.innerHTML = '🙈 Hiện Pinyin';
-    pinyinEl.style.opacity = '0';
-    pinyinEl.style.visibility = 'hidden'; 
-  }
-}
 
 function togglePinyin() {
   isPinyinVisible = !isPinyinVisible;
@@ -1268,9 +1297,6 @@ function togglePinyin() {
   }
 }
 
-// ==========================================
-// 📊 BIỂU ĐỒ THỐNG KÊ
-// ==========================================
 let learningChart = null;
 
 function getLast7Days() {
@@ -1296,19 +1322,14 @@ function closeStatsModal() {
 
 function renderChart() {
   const ctx = document.getElementById('learningChart').getContext('2d');
-  
   const days = getLast7Days();
   const labels = days.map(d => d.label);
-  const dataCounts = days.map(d => {
-    return Object.values(wordProgress).filter(p => p.firstSeen === d.dateStr).length;
-  });
-
+  const dataCounts = days.map(d => Object.values(wordProgress).filter(p => p.firstSeen === d.dateStr).length);
   const total7Days = dataCounts.reduce((a, b) => a + b, 0);
-  document.getElementById('stats-summary-text').innerHTML = `Tổng số từ mới đã nạp: <b style="color:var(--accent); font-size: 18px;">${total7Days}</b> từ`;
+  
+  document.getElementById('stats-summary-text').innerHTML = `Tổng từ mới: <b style="color:var(--accent); font-size: 18px;">${total7Days}</b> từ`;
 
-  if (learningChart) {
-    learningChart.destroy();
-  }
+  if (learningChart) learningChart.destroy();
 
   learningChart = new Chart(ctx, {
     type: 'line',
@@ -1330,45 +1351,20 @@ function renderChart() {
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: getCssVar('--surface3'),
-          titleColor: getCssVar('--text2'),
-          bodyColor: getCssVar('--text'),
-          borderColor: getCssVar('--border'),
-          borderWidth: 1,
-          displayColors: false,
-          callbacks: {
-            label: function(context) { return context.parsed.y + ' từ mới'; }
-          }
-        }
-      },
+      plugins: { legend: { display: false } },
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { color: getCssVar('--text2'), stepSize: Math.max(5, Math.ceil(Math.max(...dataCounts)/5)) }, 
-          grid: { color: getCssVar('--border') }
-        },
-        x: {
-          ticks: { color: getCssVar('--text2') },
-          grid: { display: false }
-        }
+        y: { beginAtZero: true, ticks: { color: getCssVar('--text2') }, grid: { color: getCssVar('--border') } },
+        x: { ticks: { color: getCssVar('--text2') }, grid: { display: false } }
       }
     }
   });
 }
 
-// ==========================================
-// 🌞 ĐIỀU KHIỂN GIAO DIỆN SÁNG/TỐI
-// ==========================================
 function initTheme() {
   const savedTheme = localStorage.getItem('hgf_v4_theme') || 'dark';
   if (savedTheme === 'light') {
     document.body.setAttribute('data-theme', 'light');
     document.getElementById('btn-theme').innerHTML = '🌙 Giao diện Tối';
-  } else {
-    document.getElementById('btn-theme').innerHTML = '🌞 Giao diện Sáng';
   }
 }
 
@@ -1383,10 +1379,7 @@ function toggleTheme() {
     localStorage.setItem('hgf_v4_theme', 'light');
     document.getElementById('btn-theme').innerHTML = '🌙 Giao diện Tối';
   }
-  
-  if (document.getElementById('stats-modal').classList.contains('open')) {
-    renderChart();
-  }
+  if (document.getElementById('stats-modal').classList.contains('open')) renderChart();
 }
 
 function getCssVar(name) {
@@ -1395,9 +1388,6 @@ function getCssVar(name) {
 
 initTheme();
 
-// ==========================================
-// 🔄 ĐIỀU HƯỚNG CÂU HỎI
-// ==========================================
 function goNext() {
   document.getElementById('btn-next').style.display = 'none';
   document.getElementById('btn-prev').style.display = 'block';
@@ -1414,24 +1404,17 @@ function closeLastQuestion() {
   document.getElementById('prev-modal').classList.remove('open');
 }
 
-// ==========================================
-// ⌨️ PHÍM TẮT BÀN PHÍM
-// ==========================================
 document.addEventListener('keydown', (e) => {
   const openModal = document.querySelector('.modal.open');
   if (openModal) {
-    if (e.code === 'Escape' || e.code === 'Enter') {
-      openModal.classList.remove('open');
-    }
+    if (e.code === 'Escape' || e.code === 'Enter') openModal.classList.remove('open');
     return;
   }
 
   const options = document.querySelectorAll('.option');
   if (e.key >= '1' && e.key <= '4') {
     const idx = parseInt(e.key) - 1;
-    if (options[idx] && !options[idx].disabled) {
-      options[idx].click();
-    }
+    if (options[idx] && !options[idx].disabled) options[idx].click();
   } 
   else if (e.code === 'Space') {
     e.preventDefault(); 
@@ -1440,8 +1423,9 @@ document.addEventListener('keydown', (e) => {
   else if (e.code === 'Enter') {
     e.preventDefault();
     const btnNext = document.getElementById('btn-next');
-    if (btnNext && btnNext.style.display === 'block') {
-      goNext();
-    }
+    if (btnNext && btnNext.style.display === 'block') goNext();
   }
 });
+</script>
+</body>
+</html>
