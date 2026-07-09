@@ -1,0 +1,2497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>汉语工厂 · Hán Ngữ Công Xưởng v4</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0a0b0e;
+  --surface: #12131a;
+  --surface2: #1a1c24;
+  --surface3: #22242d;
+  --border: #242730;
+  --border2: #2f323f;
+  --accent: #f5a623;
+  --accent2: #e05c2a;
+  --accent-dim: rgba(245,166,35,0.12);
+  --steel: #5b9cf6;
+  --green: #3ecf8e;
+  --red: #f26b6b;
+  --text: #edecf3;
+  --text2: #8d8d9c;
+  --text3: #4a4b58;
+  --text-strong: #ffffff;
+}
+[data-theme="light"] {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface2: #f9fafb;
+  --surface3: #f3f4f6;
+  --border: #e5e7eb;
+  --border2: #d1d5db;
+  --text: #1f2937;
+  --text2: #4b5563;
+  --text3: #6b7280;
+  --text-strong: #111827;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(165deg, rgba(245,166,35,0.05), rgba(91,156,246,0.03)), var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container { max-width: 700px; margin: 0 auto; padding: 16px; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(245,166,35,0.6);
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text2);
+}
+.stat { display: flex; align-items: center; gap: 6px; }
+.stat-val { color: var(--accent); font-weight: 700; font-size: 16px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  background: var(--surface2);
+  color: var(--text3);
+}
+.tag.new { background: rgba(62,207,142,0.1); color: var(--green); border: 1px solid var(--green); }
+.tag.review { background: rgba(91,156,246,0.1); color: var(--steel); border: 1px solid var(--steel); }
+
+.hanzi {
+  font-size: 72px;
+  font-weight: 300;
+  line-height: 1;
+  margin: 16px 0;
+  color: var(--text-strong);
+}
+
+.pinyin-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--text2);
+  margin: 8px 0;
+  transition: opacity 0.2s ease;
+}
+
+.reveal {
+  font-size: 13px;
+  color: var(--text3);
+  margin-top: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.6;
+}
+.reveal.show { color: var(--text2); }
+
+.feedback {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 12px 0;
+  min-height: 24px;
+  color: var(--text2);
+}
+.feedback.ok { color: var(--green); }
+.feedback.fail { color: var(--red); }
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 16px 0;
+}
+@media (max-width: 480px) {
+  .options {
+    grid-template-columns: 1fr; /* Màn hình nhỏ gọn lại thành 1 cột */
+  }
+}
+.option {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+  transition: all 0.15s;
+}
+.option:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface3);
+}
+.option:disabled { cursor: default; opacity: 0.6; }
+.option-main { font-size: 14px; font-weight: 500; display: block; margin-bottom: 4px; }
+.option-sub { font-size: 12px; color: var(--text3); display: block; }
+.option.correct {
+  background: rgba(62,207,142,0.1);
+  border-color: var(--green);
+}
+.option.wrong {
+  background: rgba(242,107,107,0.1);
+  border-color: var(--red);
+}
+
+.btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn-block { width: 100%; margin-bottom: 8px; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  border: none;
+  color: #100b03;
+  font-weight: 700;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.tab {
+  padding: 10px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.tab.active {
+  background: var(--surface2);
+  color: var(--accent);
+  border: 1px solid var(--border2);
+}
+
+.section-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+}
+.section-tabs::-webkit-scrollbar { display: none; }
+.section-tab {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.section-tab.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tool-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal.open { display: flex; }
+
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.modal-header {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+.form-label {
+  font-size: 12px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  display: block;
+  font-weight: 600;
+}
+.form-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.vocab-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.vocab-item {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.8fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.vocab-item:last-child { border-bottom: none; }
+.vocab-hanzi { font-size: 20px; font-weight: 300; }
+.vocab-pinyin { font-family: 'JetBrains Mono', monospace; color: var(--text2); font-size: 12px; }
+.vocab-meaning { color: var(--text2); }
+.vocab-level { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--surface2); color: var(--text3); }
+
+.goal-card {
+  background: linear-gradient(165deg, var(--surface2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+.goal-progress {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.goal-progress b { color: var(--accent); font-weight: 700; }
+
+.progress-bar {
+  height: 6px;
+  background: var(--surface3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  transition: width 0.5s ease;
+}
+
+.stats-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.reset-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.reset-btn:hover { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- MÀN HÌNH KHÓA BẢO VỆ APP -->
+<div id="lock-screen" style="position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center;">
+  <div class="brand" style="font-size: 24px; margin-bottom: 24px;">
+    <div class="brand-dot"></div>汉语工厂 v4
+  </div>
+  <div style="color: var(--text2); margin-bottom: 16px; font-size: 14px;">Bản quyền thuộc về Đạt 09. Vui lòng nhập mã kích hoạt để sử dụng.</div>
+  <input type="password" id="secret-key" class="form-input" style="width: 100%; max-width: 300px; text-align: center; font-size: 18px; margin-bottom: 16px;" placeholder="Nhập mã (Key)..." onkeydown="if(event.key === 'Enter') unlockApp()">
+  <button class="btn btn-primary" onclick="unlockApp()" style="width: 100%; max-width: 300px;">🔓 Kích hoạt App</button>
+</div>
+
+<div class="container">
+  
+  <!-- TỐI GIẢN PHẦN HEADER, CHUYỂN NÚT MENU VÀO ĐÂY -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      汉语工厂 v4
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div class="stats-row">
+        <div class="stat">✓ <span class="stat-val" id="score">0</span></div>
+        <div class="stat">/ <span id="total">0</span></div>
+        <span id="streak" style="display:none;">🔥 <span id="streak-val">0</span></span>
+      </div>
+      <button class="tool-btn" onclick="openSettingsModal()"><span>⚙️</span> Menu</button>
+    </div>
+  </div>
+
+  <div class="section-tabs" id="section-tabs"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchMode('vocab')">📝 Từ vựng</button>
+    <button class="tab" onclick="switchMode('sentence')">📋 Câu mẫu</button>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="tag" id="tag"></div>
+    <div class="hanzi" id="hanzi">—</div>
+    <div class="pinyin-display" id="pinyin-display"></div>
+    <div class="reveal" id="reveal"></div>
+    <button class="btn" style="margin-top:12px;" onclick="replay()">▶ Nghe</button>
+  </div>
+
+  <div class="feedback" id="feedback">Nghe và chọn đáp án</div>
+  <div class="options" id="options"></div>
+  
+  <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+    <button class="btn" id="btn-prev" onclick="showLastQuestion()" style="display: none; flex: 1; background: var(--surface2);">⬅️ Câu trước</button>
+    <button class="btn btn-primary" id="btn-next" onclick="goNext()" style="display: none; flex: 2; font-weight: 700;">Tiếp tục ➡️ (Enter)</button>
+  </div>
+  
+  <div class="stats-panel">
+    <span>Độ chính xác: <span style="color:var(--accent); font-weight:700;" id="acc">—</span></span>
+    <button class="reset-btn" onclick="resetData()">Xóa điểm hôm nay</button>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- ⚙️ KHỐI MENU / SETTINGS MỚI ĐƯỢC GỘP CHUNG ⚙️ -->
+<!-- ============================================== -->
+<div class="modal" id="settings-modal">
+  <div class="modal-content">
+    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>⚙️ Menu Ứng Dụng</span>
+      <button onclick="closeSettingsModal()" style="background:transparent; border:none; color:var(--text2); font-size:20px; cursor:pointer;">&times;</button>
+    </div>
+
+    <!-- MỤC TIÊU HÀNG NGÀY -->
+    <div class="goal-card" style="margin-bottom: 24px;">
+      <div style="font-weight: 600; color: var(--text); margin-bottom: 8px;">🎯 Mục tiêu hôm nay</div>
+      <div class="goal-progress" id="goal-progress">Đang tải...</div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="goal-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- CÁC CÔNG CỤ -->
+    <div class="form-group">
+      <label class="form-label">Công cụ học tập</label>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <button class="btn" onclick="closeSettingsModal(); openAddVocabModal()">➕ Thêm từ</button>
+        <button class="btn" onclick="closeSettingsModal(); openVocabListModal()">📚 Kho (<span id="total-vocab">0</span> từ)</button>
+        <button class="btn" id="btn-pinyin" onclick="togglePinyin()">👁️ Ẩn Pinyin</button>
+        <button class="btn" id="btn-theme" onclick="toggleTheme()">🌞 Giao diện Sáng</button>
+        <button class="btn btn-primary" style="grid-column: span 2;" onclick="closeSettingsModal(); openStatsModal()">📊 Xem Biểu Đồ Thống Kê (7 ngày)</button>
+      </div>
+    </div>
+
+    <!-- CÀI ĐẶT KHỐI HỌC (BLOCK) -->
+    <div class="form-group">
+      <label class="form-label">Kích thước Khối (Số từ / Khối)</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px; margin-bottom: 12px;">
+        <button class="btn" onclick="setBlockSize(10)">10</button>
+        <button class="btn" onclick="setBlockSize(15)">15</button>
+        <button class="btn" onclick="setBlockSize(20)">20</button>
+        <button class="btn" onclick="setBlockSize(30)">30</button>
+      </div>
+      <label class="form-label">Chọn khối để học / ôn tập</label>
+      <select id="block-selector" class="form-input" onchange="changeBlock(this.value)">
+      </select>
+    </div>
+
+    <!-- DATA & BACKUP -->
+    <div class="form-group">
+      <label class="form-label">Quản lý Dữ liệu</label>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <button class="btn" onclick="exportData()">📥 Tải Backup (JSON)</button>
+        <button class="btn" onclick="importDataPrompt()">📤 Phục hồi (JSON)</button>
+        <button class="btn" style="grid-column: span 2; color:var(--red); border-color:rgba(242,107,107,0.3);" onclick="resetAllData()">🗑️ Xóa toàn bộ App (Reset 100%)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CÁC POPUP PHỤ TRỢ BÊN DƯỚI GIỮ NGUYÊN -->
+
+<!-- ADD VOCAB MODAL -->
+<div class="modal" id="add-vocab-modal">
+  <div class="modal-content">
+    <div class="modal-header">➕ Thêm từ vựng mới</div>
+    <div class="form-group">
+      <label class="form-label">Chữ Hán</label>
+      <input type="text" class="form-input" id="add-hanzi" placeholder="VD: 生产">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Pinyin</label>
+      <input type="text" class="form-input" id="add-pinyin" placeholder="VD: shēng chǎn">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tiếng Việt</label>
+      <input type="text" class="form-input" id="add-vi" placeholder="VD: sản xuất">
+    </div>
+    <div class="form-group">
+      <label class="form-label">English</label>
+      <input type="text" class="form-input" id="add-en" placeholder="VD: production">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Chủ đề</label>
+      <select class="form-input" id="add-section">
+        <option value="factory">🏭 Công xưởng</option>
+        <option value="daily">💬 Giao tiếp</option>
+        <option value="custom">⭐ Từ của tôi</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="addVocab()">Lưu Từ Vựng</button>
+    <button class="btn btn-block" onclick="closeAddVocabModal()">Đóng</button>
+  </div>
+</div>
+
+<!-- VOCAB LIST MODAL -->
+<div class="modal" id="vocab-list-modal">
+  <div class="modal-content">
+    <div class="modal-header">📚 Kho từ vựng (<span id="vocab-count">0</span> từ)</div>
+    <div class="vocab-list" id="vocab-list"></div>
+    <button class="btn btn-block" style="margin-top:16px;" onclick="closeVocabListModal()">Đóng</button>
+  </div>
+</div>
+
+<!-- STATS CHART MODAL -->
+<div class="modal" id="stats-modal">
+  <div class="modal-content">
+    <div class="modal-header">📊 Thống kê học tập (7 ngày)</div>
+    <canvas id="learningChart" height="200"></canvas>
+    <div id="stats-summary-text" style="margin-top: 16px; font-size: 14px; color: var(--text2); text-align: center;">Đang tải dữ liệu...</div>
+    <button class="btn btn-block" style="margin-top:16px;" onclick="closeStatsModal()">Đóng</button>
+  </div>
+</div>
+
+<!-- MODAL XEM LẠI CÂU TRƯỚC -->
+<div class="modal" id="prev-modal">
+  <div class="modal-content">
+    <div class="modal-header" style="color: var(--text2); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">⬅️ Chi tiết câu trước</div>
+    <div id="prev-content" style="margin: 16px 0;"></div>
+    <button class="btn btn-primary btn-block" onclick="closeLastQuestion()">Đóng (Esc)</button>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// 🔐 HỆ THỐNG KHÓA BẢO VỆ
+// ==========================================
+const VALID_KEYS = ['DAT09VIP']; 
+
+function checkLock() {
+  const isUnlocked = localStorage.getItem('hgf_v4_unlocked');
+  if (isUnlocked === 'true') {
+    document.getElementById('lock-screen').style.display = 'none';
+  }
+}
+
+function unlockApp() {
+  const input = document.getElementById('secret-key').value.trim().toUpperCase();
+  if (VALID_KEYS.includes(input)) {
+    localStorage.setItem('hgf_v4_unlocked', 'true');
+    document.getElementById('lock-screen').style.display = 'none';
+  } else {
+    alert('Mã kích hoạt không đúng. Vui lòng kiểm tra lại!');
+  }
+}
+
+checkLock();
+
+const GOAL_PRESETS = [10, 15, 20, 30];
+const SRS_INTERVALS_MS = [0, 8*60*1000, 1*24*3600*1000, 2*24*3600*1000, 4*24*3600*1000, 8*24*3600*1000, 16*24*3600*1000];
+
+const sections = [
+  { id: 'all', label: '🔀 Tất cả' },
+  { id: 'factory', label: '🏭 Công xưởng' },
+  { id: 'daily', label: '💬 Giao tiếp' },
+  { id: 'custom', label: '⭐ Từ của tôi' },
+  { id: 'mistakes', label: '⚠️ Trả lời sai' }
+];
+
+// 450+ từ vựng
+const VOCAB_DATA = [
+  ['factory','生产','shēng chǎn','sản xuất','production'],
+  ['factory','流水线','liú shuǐ xiàn','dây chuyền sản xuất','assembly line'],
+  ['factory','组装','zǔ zhuāng','lắp ráp','assemble'],
+  ['factory','包装','bāo zhuāng','đóng gói','packaging'],
+  ['factory','加工','jiā gōng','gia công','processing'],
+  ['factory','产量','chǎn liàng','sản lượng','output'],
+  ['factory','进度','jìn dù','tiến độ','progress'],
+  ['factory','赶工','gǎn gōng','chạy tiến độ','rush work'],
+  ['factory','延误','yán wù','chậm trễ','delay'],
+  ['factory','报废','bào fèi','phế liệu','scrap'],
+  ['factory','设备','shè bèi','thiết bị','equipment'],
+  ['factory','零件','líng jiàn','linh kiện','parts'],
+  ['factory','工序','gōng xù','công đoạn','work step'],
+  ['factory','自动化','zì dòng huà','tự động hóa','automation'],
+  ['factory','图纸','tú zhǐ','bản vẽ','drawing'],
+  ['factory','检验','jiǎn yàn','kiểm tra','inspect'],
+  ['factory','合格','hé gé','đạt tiêu chuẩn','qualified'],
+  ['factory','不合格','búhégé','không đạt','unqualified'],
+  ['factory','返工','fǎn gōng','làm lại','rework'],
+  ['factory','尺寸','chǐ cùn','kích thước','dimension'],
+  ['factory','规格','guī gé','quy cách','specification'],
+  ['factory','误差','wù chā','sai số','tolerance'],
+  ['factory','外观','wài guān','ngoại quan','appearance'],
+  ['factory','划伤','huá shāng','vết xước','scratch'],
+  ['factory','生锈','shēng xiù','rỉ sét','rust'],
+  ['factory','变形','biàn xíng','biến dạng','deformation'],
+  ['factory','毛刺','máo cì','bavia','burr'],
+  ['factory','公差','gōng chā','dung sai','tolerance'],
+  ['factory','维修','wéi xiū','sửa chữa','repair'],
+  ['factory','保养','bǎo yǎng','bảo dưỡng','maintenance'],
+  ['factory','故障','gù zhàng','sự cố','malfunction'],
+  ['factory','更换','gēng huàn','thay thế','replace'],
+  ['factory','拆卸','chāi xiè','tháo dỡ','disassemble'],
+  ['factory','螺丝','luó sī','ốc vít','screw'],
+  ['factory','扳手','bān shǒu','cờ lê','wrench'],
+  ['factory','焊接','hàn jiē','hàn','welding'],
+  ['factory','模具','mó jù','khuôn đúc','mold'],
+  ['factory','精度','jīng dù','độ chính xác','precision'],
+  ['factory','电机','diàn jī','động cơ điện','motor'],
+  ['factory','传感器','chuán gǎn qì','cảm biến','sensor'],
+  ['factory','程序','chéng xù','chương trình','program'],
+  ['factory','调试','tiáo shì','hiệu chỉnh','debug'],
+  ['factory','仓库','cāng kù','nhà kho','warehouse'],
+  ['factory','库存','kù cún','tồn kho','inventory'],
+  ['factory','入库','rù kù','nhập kho','put in storage'],
+  ['factory','出库','chū kù','xuất kho','outbound'],
+  ['factory','物料','wù liào','vật tư','materials'],
+  ['factory','供应商','gōng yìng shāng','nhà cung cấp','supplier'],
+  ['factory','安全','ān quán','an toàn','safety'],
+  ['factory','考勤','kǎo qín','chấm công','attendance'],
+  ['factory','请假','qǐng jià','xin nghỉ phép','ask for leave'],
+  ['factory','加班','jiā bān','tăng ca','overtime'],
+  ['factory','主管','zhǔ guǎn','quản lý','supervisor'],
+  ['factory','工程师','gōng chéng shī','kỹ sư','engineer'],
+  ['factory','设计','shè jì','thiết kế','design'],
+  ['factory','三维模型','sān wéi mó xíng','mô hình 3D','3D model'],
+  ['factory','散热器','sàn rè qì','tản nhiệt','heatsink'],
+  ['factory','热管','rè guǎn','ống tản nhiệt','heat pipe'],
+  ['factory','风扇','fēng shàn','quạt','fan'],
+  ['factory','导热硅脂','dǎo rè guī zhī','keo tản nhiệt','thermal paste'],
+  ['factory','参数','cān shù','thông số','parameter'],
+  ['factory','压铸','yā zhù','đúc áp lực','die casting'],
+  ['factory','注塑','zhù sù','ép nhựa','injection molding'],
+  ['factory','冲压','chōng yā','đột dập','stamping'],
+  ['factory','表面处理','biǎo miàn chǔ lǐ','xử lý bề mặt','surface treatment'],
+  ['factory','研发','yán fā','R&D','R&D'],
+  ['factory','样品','yàng pǐn','hàng mẫu','sample'],
+  ['factory','测试','cè shì','test','testing'],
+  ['factory','生产计划','shēng chǎn jì huà','kế hoạch sản xuất','production plan'],
+  ['factory','订单','dìng dān','đơn hàng','order'],
+  ['factory','交货','jiāo huò','giao hàng','delivery'],
+  ['factory','交期','jiāo qī','thời hạn giao hàng','deadline'],
+  ['factory','效率','xiào lǜ','hiệu suất','efficiency'],
+  ['factory','产能','chǎn néng','năng lực sản xuất','capacity'],
+  ['factory','良率','liáng lǜ','tỷ lệ đạt','yield rate'],
+  ['factory','不良品','búliángpǐn','hàng lỗi','defective product'],
+  ['factory','次品','cì pǐn','hàng thứ phẩm','second-rate'],
+  ['factory','良品','liáng pǐn','hàng tốt','good product'],
+  ['factory','抽检','chōu jiǎn','kiểm tra ngẫu nhiên','sampling'],
+  ['factory','全检','quán jiǎn','kiểm tra toàn bộ','full inspection'],
+  ['factory','批次','pī cì','lô hàng','batch'],
+  ['factory','停机','tíng jī','dừng máy','stop machine'],
+  ['factory','开机','kāi jī','khởi động máy','start machine'],
+  ['factory','班组长','bān zǔ zhǎng','tổ trưởng','team leader'],
+  ['factory','车间','chē jiān','phân xưởng','workshop'],
+  ['factory','品管','pǐn guǎn','quản lý chất lượng','QC'],
+  ['factory','质量','zhì liàng','chất lượng','quality'],
+  ['factory','报告','bào gào','báo cáo','report'],
+  ['factory','通知','tōng zhī','thông báo','notice'],
+  ['factory','培训','péi xùn','đào tạo','training'],
+  ['factory','工资','gōng zī','lương','salary'],
+  ['factory','奖金','jiǎng jīn','tiền thưởng','bonus'],
+  ['factory','罚款','fá kuǎn','phạt tiền','fine'],
+  ['factory','迟到','chí dào','đi muộn','late'],
+  ['factory','早退','zǎo tuì','về sớm','leave early'],
+  ['factory','旷工','kuàng gōng','nghỉ không phép','absent'],
+  ['factory','打卡','dǎ kǎ','chấm công','clock in'],
+  ['factory','上班','shàng bān','đi làm','go to work'],
+  ['factory','值班','zhí bān','trực ca','on duty'],
+  ['factory','白班','bái bān','ca ngày','day shift'],
+  ['factory','夜班','yè bān','ca đêm','night shift'],
+  ['factory','倒班','dǎo bān','đổi ca','shift rotation'],
+  ['factory','交接班','jiāo jiē bān','giao ca','shift handover'],
+  ['factory','工位','gōng wèi','vị trí làm việc','workstation'],
+  ['factory','工装','gōng zhuāng','đồ gá','fixture'],
+  ['factory','夹具','jiā jù','đồ gá','jig'],
+  ['factory','治具','zhì jù','đồ gá','jig'],
+  ['factory','刀具','dāo jù','dao cắt','cutting tool'],
+  ['factory','量具','liàng jù','dụng cụ đo','measuring tool'],
+  ['factory','游标卡尺','yóu biāo kǎ chǐ','thước cặp','calipers'],
+  ['factory','千分尺','qiān fēn chǐ','panme','micrometer'],
+  ['factory','三坐标','sān zuò biāo','máy CMM','CMM'],
+  ['factory','硬度','yìng dù','độ cứng','hardness'],
+  ['factory','材质','cái zhì','chất liệu','material'],
+  ['factory','铝合金','lǚ hé jīn','hợp kim nhôm','aluminum alloy'],
+  ['factory','不锈钢','búxiùgāng','inox','stainless steel'],
+  ['factory','塑料','sù liào','nhựa','plastic'],
+  ['factory','橡胶','xiàng jiāo','cao su','rubber'],
+  ['factory','铜','tóng','đồng','copper'],
+  ['factory','铁','tiě','sắt','iron'],
+  ['factory','钢','gāng','thép','steel'],
+  ['factory','螺母','luó mǔ','đai ốc','nut'],
+  ['factory','螺栓','luó shuān','bu lông','bolt'],
+  ['factory','垫片','diàn piàn','miếng đệm','washer'],
+  ['factory','弹簧','tán huáng','lò xo','spring'],
+  ['factory','轴承','zhóu chéng','vòng bi','bearing'],
+  ['factory','齿轮','chǐ lún','bánh răng','gear'],
+  ['factory','皮带','pí dài','dây curoa','belt'],
+  ['factory','管道','guǎn dào','đường ống','pipe'],
+  ['factory','电路板','diàn lù bǎn','bảng mạch','PCB'],
+  ['factory','电线','diàn xiàn','dây điện','electric wire'],
+  ['factory','电源','diàn yuán','nguồn điện','power supply'],
+  ['factory','电压','diàn yā','điện áp','voltage'],
+  ['factory','电流','diàn liú','dòng điện','current'],
+  ['factory','短路','duǎn lù','chập điện','short circuit'],
+  ['factory','漏电','lòu diàn','rò điện','leakage'],
+  ['factory','接地','jiē dì','tiếp đất','grounding'],
+  ['factory','开关','kāi guān','công tắc','switch'],
+  ['factory','按钮','àn niǔ','nút bấm','button'],
+  ['factory','指示灯','zhǐ shì dēng','đèn báo','indicator light'],
+  ['factory','机械手','jī xiè shǒu','tay robot','robotic arm'],
+  ['factory','机器人','jī qì rén','robot','robot'],
+  ['factory','报工','bào gōng','báo cáo sản lượng','report output'],
+  ['factory','领料','lǐng liào','lãnh vật tư','draw materials'],
+  ['factory','退料','tuì liào','trả vật tư','return materials'],
+  ['factory','托盘','tuō pán','pallet','pallet'],
+  ['factory','周转箱','zhōu zhuǎn xiāng','thùng luân chuyển','turnover box'],
+  ['factory','叉车','chā chē','xe nâng','forklift'],
+  ['factory','搬运','bān yùn','vận chuyển','transport'],
+  ['factory','货车','huò chē','xe tải','truck'],
+  ['factory','司机','sī jī','tài xế','driver'],
+  ['factory','出货','chū huò','xuất hàng','ship out'],
+  ['factory','收货','shōu huò','nhận hàng','receive goods'],
+  ['factory','验收','yàn shōu','nghiệm thu','acceptance'],
+  ['factory','客户','kè hù','khách hàng','customer'],
+  ['factory','投诉','tóu sù','khiếu nại','complaint'],
+  ['factory','索赔','suǒ péi','đòi bồi thường','claim'],
+  ['factory','改善','gǎi shàn','cải tiến','improvement'],
+  ['factory','现场','xiàn chǎng','hiện trường','site'],
+  ['factory','整理','zhěng lǐ','sắp xếp','organize'],
+  ['factory','整顿','zhěng dùn','chỉnh đốn','set in order'],
+  ['factory','清扫','qīng sǎo','dọn dẹp','sweep'],
+  ['factory','清洁','qīng jié','sạch sẽ','clean'],
+  ['factory','素养','sù yǎng','tố chất','discipline'],
+  ['factory','消防','xiāo fáng','phòng cháy chữa cháy','fire prevention'],
+  ['factory','灭火器','miè huǒ qì','bình chữa cháy','fire extinguisher'],
+  ['factory','安全帽','ān quán mào','mũ bảo hộ','safety helmet'],
+  ['factory','口罩','kǒu zhào','khẩu trang','face mask'],
+  ['factory','手套','shǒu tào','găng tay','gloves'],
+  ['factory','护目镜','hù mù jìng','kính bảo hộ','safety goggles'],
+  ['factory','耳塞','ěr sāi','nút bịt tai','earplugs'],
+  ['factory','工作服','gōng zuò fú','đồng phục','work uniform'],
+  ['factory','安全鞋','ān quán xié','giày bảo hộ','safety shoes'],
+  ['factory','危险','wēi xiǎn','nguy hiểm','dangerous'],
+  ['factory','警示','jǐng shì','cảnh báo','warning'],
+  ['factory','事故','shì gù','tai nạn','accident'],
+  ['factory','受伤','shòu shāng','bị thương','injured'],
+  ['factory','急救','jí jiù','sơ cứu','first aid'],
+  ['factory','医务室','yī wù shì','phòng y tế','medical room'],
+  ['factory','消毒','xiāo dú','khử trùng','disinfect'],
+  ['factory','环保','huán bǎo','bảo vệ môi trường','environmental protection'],
+  ['factory','废水','fèi shuǐ','nước thải','wastewater'],
+  ['factory','废气','fèi qì','khí thải','exhaust gas'],
+  ['factory','噪音','zào yīn','tiếng ồn','noise'],
+  ['factory','灰尘','huī chén','bụi','dust'],
+  ['factory','化学品','huà xué pǐn','hóa chất','chemicals'],
+  ['factory','标签','biāo qiān','nhãn','label'],
+  ['factory','条码','tiáo mǎ','mã vạch','barcode'],
+  ['factory','扫描','sǎo miáo','quét','scan'],
+  ['factory','追溯','zhuī sù','truy xuất nguồn gốc','traceability'],
+  ['factory','版本','bǎn běn','phiên bản','version'],
+  ['factory','更新','gēng xīn','cập nhật','update'],
+  ['factory','软件','ruǎn jiàn','phần mềm','software'],
+  ['factory','硬件','yìng jiàn','phần cứng','hardware'],
+  // === GIAO TIẾP HÀNG NGÀY ===
+  ['daily','你好','nǐ hǎo','xin chào','hello'],
+  ['daily','谢谢','xiè xie','cảm ơn','thank you'],
+  ['daily','对不起','duì bu qǐ','xin lỗi','sorry'],
+  ['daily','没关系','méi guān xi','không sao','it\'s okay'],
+  ['daily','好的','hǎo de','được','okay'],
+  ['daily','再见','zài jiàn','tạm biệt','goodbye'],
+  ['daily','早上好','zǎo shang hǎo','chào buổi sáng','good morning'],
+  ['daily','晚安','wǎn ān','chúc ngủ ngon','good night'],
+  ['daily','吃饭了吗','chī fàn le ma','ăn cơm chưa','have you eaten'],
+  ['daily','辛苦了','xīn kǔ le','vất vả rồi','thanks for your work'],
+  ['daily','麻烦你了','má fan nǐ le','phiền bạn','sorry to bother'],
+  ['daily','请稍等','qǐng shāo děng','đợi một chút','wait a moment'],
+  ['daily','听不懂','tīng búdǒng','nghe không hiểu','don\'t understand'],
+  ['daily','请再说一遍','qǐng zài shuō yí biàn','nói lại lần nữa','say it again'],
+  ['daily','多少钱','duō shǎo qián','bao nhiêu tiền','how much'],
+  ['daily','太贵了','tài guì le','đắt quá','too expensive'],
+  ['daily','电脑','diàn nǎo','máy tính','computer'],
+  ['daily','手机','shǒu jī','điện thoại','phone'],
+  ['daily','办公室','bàn gōng shì','văn phòng','office'],
+  ['daily','开会','kāi huì','họp','meeting'],
+  ['daily','下班','xià bān','tan làm','get off work'],
+  ['daily','一','yī','một','one'],
+  ['daily','二','èr','hai','two'],
+  ['daily','三','sān','ba','three'],
+  ['daily','四','sì','bốn','four'],
+  ['daily','五','wǔ','năm','five'],
+  ['daily','六','liù','sáu','six'],
+  ['daily','七','qī','bảy','seven'],
+  ['daily','八','bā','tám','eight'],
+  ['daily','九','jiǔ','chín','nine'],
+  ['daily','十','shí','mười','ten'],
+  ['daily','百','bǎi','trăm','hundred'],
+  ['daily','千','qiān','nghìn','thousand'],
+  ['daily','今天','jīn tiān','hôm nay','today'],
+  ['daily','明天','míng tiān','ngày mai','tomorrow'],
+  ['daily','昨天','zuó tiān','hôm qua','yesterday'],
+  ['daily','现在','xiàn zài','bây giờ','now'],
+  ['daily','早上','zǎo shang','buổi sáng','morning'],
+  ['daily','中午','zhōng wǔ','buổi trưa','noon'],
+  ['daily','下午','xià wǔ','buổi chiều','afternoon'],
+  ['daily','晚上','wǎn shang','buổi tối','evening'],
+  ['daily','爸爸','bà ba','bố','father'],
+  ['daily','妈妈','mā ma','mẹ','mother'],
+  ['daily','儿子','ér zi','con trai','son'],
+  ['daily','女儿','nǚ ér','con gái','daughter'],
+  ['daily','老公','lǎo gōng','chồng','husband'],
+  ['daily','老婆','lǎo po','vợ','wife'],
+  ['daily','哥哥','gē ge','anh trai','older brother'],
+  ['daily','姐姐','jiě jie','chị gái','older sister'],
+  ['daily','弟弟','dì di','em trai','younger brother'],
+  ['daily','妹妹','mèi mei','em gái','younger sister'],
+  ['daily','朋友','péng you','bạn bè','friend'],
+  ['daily','家人','jiā rén','người nhà','family'],
+  ['daily','米饭','mǐ fàn','cơm','rice'],
+  ['daily','面条','miàn tiáo','mì','noodles'],
+  ['daily','面包','miàn bāo','bánh mì','bread'],
+  ['daily','水果','shuǐ guǒ','trái cây','fruit'],
+  ['daily','蔬菜','shū cài','rau','vegetables'],
+  ['daily','肉','ròu','thịt','meat'],
+  ['daily','鸡肉','jī ròu','thịt gà','chicken'],
+  ['daily','猪肉','zhū ròu','thịt heo','pork'],
+  ['daily','牛肉','niú ròu','thịt bò','beef'],
+  ['daily','鱼','yú','cá','fish'],
+  ['daily','鸡蛋','jī dàn','trứng gà','egg'],
+  ['daily','水','shuǐ','nước','water'],
+  ['daily','茶','chá','trà','tea'],
+  ['daily','咖啡','kā fēi','cà phê','coffee'],
+  ['daily','啤酒','pí jiǔ','bia','beer'],
+  ['daily','好吃','hǎo chī','ngon','delicious'],
+  ['daily','好喝','hǎo hē','ngon','tasty'],
+  ['daily','辣','là','cay','spicy'],
+  ['daily','甜','tián','ngọt','sweet'],
+  ['daily','咸','xián','mặn','salty'],
+  ['daily','酸','suān','chua','sour'],
+  ['daily','饿','è','đói','hungry'],
+  ['daily','饱','bǎo','no','full'],
+  ['daily','渴','kě','khát','thirsty'],
+  ['daily','公交车','gōng jiāo chē','xe buýt','bus'],
+  ['daily','出租车','chū zū chē','taxi','taxi'],
+  ['daily','火车','huǒ chē','tàu hỏa','train'],
+  ['daily','飞机','fēi jī','máy bay','airplane'],
+  ['daily','摩托车','mó tuō chē','xe máy','motorbike'],
+  ['daily','自行车','zì xíng chē','xe đạp','bicycle'],
+  ['daily','车站','chē zhàn','bến xe','station'],
+  ['daily','机场','jī chǎng','sân bay','airport'],
+  ['daily','地址','dì zhǐ','địa chỉ','address'],
+  ['daily','路','lù','đường','road'],
+  ['daily','左边','zuǒ biān','bên trái','left'],
+  ['daily','右边','yòu biān','bên phải','right'],
+  ['daily','前面','qián miàn','phía trước','front'],
+  ['daily','后面','hòu miàn','phía sau','behind'],
+  ['daily','附近','fù jìn','gần đây','nearby'],
+  ['daily','商店','shāng diàn','cửa hàng','store'],
+  ['daily','超市','chāo shì','siêu thị','supermarket'],
+  ['daily','价格','jià gé','giá cả','price'],
+  ['daily','便宜','pián yi','rẻ','cheap'],
+  ['daily','贵','guì','đắt','expensive'],
+  ['daily','现金','xiàn jīn','tiền mặt','cash'],
+  ['daily','银行','yín háng','ngân hàng','bank'],
+  ['daily','银行卡','yín háng kǎ','thẻ ngân hàng','bank card'],
+  ['daily','天气','tiān qì','thời tiết','weather'],
+  ['daily','热','rè','nóng','hot'],
+  ['daily','冷','lěng','lạnh','cold'],
+  ['daily','下雨','xià yǔ','trời mưa','raining'],
+  ['daily','晴天','qíng tiān','trời nắng','sunny'],
+  ['daily','刮风','guā fēng','có gió','windy'],
+  ['daily','生病','shēng bìng','bị bệnh','sick'],
+  ['daily','感冒','gǎn mào','cảm cúm','cold'],
+  ['daily','发烧','fā shāo','sốt','fever'],
+  ['daily','头疼','tóu téng','đau đầu','headache'],
+  ['daily','肚子疼','dù zi téng','đau bụng','stomachache'],
+  ['daily','医院','yī yuàn','bệnh viện','hospital'],
+  ['daily','医生','yī shēng','bác sĩ','doctor'],
+  ['daily','药','yào','thuốc','medicine'],
+  ['daily','打针','dǎ zhēn','tiêm','injection'],
+  ['daily','高兴','gāo xìng','vui','happy'],
+  ['daily','开心','kāi xīn','vui vẻ','cheerful'],
+  ['daily','难过','nán guò','buồn','sad'],
+  ['daily','生气','shēng qì','tức giận','angry'],
+  ['daily','累','lèi','mệt','tired'],
+  ['daily','紧张','jǐn zhāng','lo lắng','nervous'],
+  ['daily','想家','xiǎng jiā','nhớ nhà','homesick'],
+  ['daily','房间','fáng jiān','phòng','room'],
+  ['daily','床','chuáng','giường','bed'],
+  ['daily','桌子','zhuō zi','bàn','table'],
+  ['daily','椅子','yǐ zi','ghế','chair'],
+  ['daily','门','mén','cửa','door'],
+  ['daily','窗户','chuāng hu','cửa sổ','window'],
+  ['daily','洗澡','xǐ zǎo','tắm','shower'],
+  ['daily','睡觉','shuì jiào','ngủ','sleep'],
+  ['daily','起床','qǐ chuáng','thức dậy','get up'],
+  ['daily','刷牙','shuā yá','đánh răng','brush teeth'],
+  ['daily','洗衣服','xǐ yī fu','giặt đồ','wash clothes'],
+  ['daily','喜欢','xǐ huan','thích','like'],
+  ['daily','爱','ài','yêu','love'],
+  ['daily','想','xiǎng','muốn','want'],
+  ['daily','知道','zhī dào','biết','know'],
+  ['daily','认识','rèn shi','quen biết','know someone'],
+  ['daily','学习','xué xí','học','study'],
+  ['daily','工作','gōng zuò','làm việc','work'],
+  ['daily','说话','shuō huà','nói','speak'],
+  ['daily','听','tīng','nghe','listen'],
+  ['daily','看','kàn','nhìn','look'],
+  ['daily','走','zǒu','đi','walk'],
+  ['daily','来','lái','đến','come'],
+  ['daily','去','qù','đi','go'],
+  ['daily','回家','huí jiā','về nhà','go home'],
+  ['daily','帮忙','bāng máng','giúp đỡ','help'],
+  ['daily','大','dà','lớn','big'],
+  ['daily','小','xiǎo','nhỏ','small'],
+  ['daily','多','duō','nhiều','many'],
+  ['daily','少','shǎo','ít','few'],
+  ['daily','快','kuài','nhanh','fast'],
+  ['daily','慢','màn','chậm','slow'],
+  ['daily','新','xīn','mới','new'],
+  ['daily','旧','jiù','cũ','old'],
+  ['daily','坏','huài','xấu','bad'],
+  ['daily','打电话','dǎ diàn huà','gọi điện','call'],
+  ['daily','发短信','fā duǎn xìn','nhắn tin','text'],
+  ['daily','微信','wēi xìn','WeChat','WeChat'],
+  ['daily','加好友','jiā hǎo yǒu','kết bạn','add friend'],
+  ['daily','视频通话','shì pín tōng huà','gọi video','video call'],
+  // === THIẾT KẾ CƠ KHÍ & 3D (CAD/CAM) ===
+  ['factory','草图','cǎo tú','phác thảo (sketch)','sketch'],
+  ['factory','建模','jiàn mó','dựng mô hình','modeling'],
+  ['factory','拉伸','lā shēn','đùn/kéo dãn (extrude)','extrude'],
+  ['factory','旋转','xuán zhuǎn','xoay (revolve)','revolve'],
+  ['factory','倒角','dǎo jiǎo','vát mép (chamfer)','chamfer'],
+  ['factory','圆角','yuán jiǎo','bo tròn (fillet)','fillet'],
+  ['factory','阵列','zhèn liè','sao chép mảng (pattern)','pattern'],
+  ['factory','配合','pèi hé','lắp ráp/ràng buộc','mate/constraint'],
+  ['factory','剖视图','pōu shì tú','hình cắt/mặt cắt','section view'],
+  ['factory','渲染','xuàn rǎn','kết xuất đồ họa','render'],
+  ['factory','装配','zhuāng pèi','lắp ráp','assembly'],
+  ['factory','干涉','gān shè','giao cắt/chồng lấn','interference'],
+  ['factory','几何','jǐ hé','hình học','geometry'],
+  ['factory','挤压','jǐ yā','ép đùn','extrusion'],
+  ['factory','外壳','wài ké','vỏ bọc/case','casing/shell'],
+
+  // === TẢN NHIỆT & NHIỆT ĐỘ (Thermal/Cooling) ===
+  ['factory','热传导','rè chuán dǎo','dẫn nhiệt','heat conduction'],
+  ['factory','对流','duì liú','đối lưu','convection'],
+  ['factory','辐射','fú shè','bức xạ','radiation'],
+  ['factory','热阻','rè zǔ','nhiệt trở','thermal resistance'],
+  ['factory','均温板','jūn wēn bǎn','buồng hơi (vapor chamber)','vapor chamber'],
+  ['factory','水冷','shuǐ lěng','tản nhiệt nước','water cooling'],
+  ['factory','风冷','fēng lěng','tản nhiệt khí','air cooling'],
+  ['factory','冷排','lěng pái','két nước/radiator','radiator'],
+  ['factory','水泵','shuǐ bèng','máy bơm','water pump'],
+  ['factory','气流','qì liú','luồng khí','airflow'],
+  ['factory','转速','zhuǎn sù','tốc độ quay (RPM)','RPM'],
+  ['factory','泄漏','xiè lòu','rò rỉ','leakage'],
+  ['factory','底座','dǐ zuò','đế tiếp xúc','base plate'],
+  ['factory','鳍片','qí piàn','lá tản nhiệt','fin'],
+
+  // === VẬT LIỆU & GIA CÔNG BỀ MẶT ===
+  ['factory','疲劳测试','pí láo cè shì','kiểm tra độ mỏi','fatigue test'],
+  ['factory','强度','qiáng dù','độ bền/cường độ','strength'],
+  ['factory','刚度','gāng dù','độ cứng vững','stiffness'],
+  ['factory','粗糙度','cū cāo dù','độ nhám','roughness'],
+  ['factory','镀锌','dù xīn','mạ kẽm','galvanizing'],
+  ['factory','阳极氧化','yáng jí yáng huà','anode hóa nhôm','anodizing'],
+  ['factory','喷砂','pēn shā','phun cát','sandblasting'],
+  ['factory','镭雕','léi diāo','khắc laser','laser engraving'],
+  ['factory','丝印','sī yìn','in lụa','silkscreen'],
+  ['factory','抛光','pāo guāng','đánh bóng','polishing'],
+
+  // === HỆ THỐNG NHÚNG & ĐIỆN TỬ (Embedded/Electronics) ===
+  ['factory','微控制器','wēi kòng zhì qì','vi điều khiển','microcontroller'],
+  ['factory','芯片','xīn piàn','con chip','chip'],
+  ['factory','电路图','diàn lù tú','sơ đồ mạch','schematic'],
+  ['factory','引脚','yǐn jiǎo','chân cắm (pin)','pin'],
+  ['factory','接口','jiē kǒu','cổng kết nối','interface'],
+  ['factory','串口','chuàng kǒu','cổng nối tiếp (serial)','serial port'],
+  ['factory','波特率','bō tè lǜ','tốc độ baud','baud rate'],
+  ['factory','协议','xié yì','giao thức','protocol'],
+  ['factory','驱动程序','qū dòng chéng xù','trình điều khiển (driver)','driver'],
+  ['factory','步进电机','bù jìn diàn jī','động cơ bước','stepper motor'],
+  ['factory','伺服电机','sì fú diàn jī','động cơ servo','servo motor'],
+  ['factory','编码器','biān mǎ qì','encoder/bộ mã hóa','encoder'],
+  ['factory','频率','pín lǜ','tần số','frequency'],
+  ['factory','阻抗','zǔ kàng','trở kháng','impedance'],
+  ['factory','电容','diàn róng','tụ điện','capacitor'],
+  ['factory','电阻','diàn zǔ','điện trở','resistor'],
+  ['factory','电感','diàn gǎn','cuộn cảm','inductor'],
+  ['factory','继电器','jì diàn qì','rơ le','relay'],
+  ['factory','变压器','biàn yā qì','máy biến áp','transformer'],
+  ['factory','示波器','shì bō qì','máy hiện sóng','oscilloscope'],
+  ['factory','万用表','wàn yòng biǎo','đồng hồ vạn năng','multimeter'],
+  ['factory','主板','zhǔ bǎn','bo mạch chủ','motherboard'],
+  ['factory','无线','wú xiàn','không dây','wireless'],
+  ['factory','网线','wǎng xiàn','dây mạng','ethernet cable'],
+
+  // === THIẾT BỊ CÔNG NGHỆ & ÂM THANH ===
+  ['daily','扬声器','yáng shēng qì','loa','speaker'],
+  ['daily','音箱','yīn xiāng','thùng loa/loa bluetooth','speaker box'],
+  ['daily','音质','yīn zhì','chất lượng âm thanh','sound quality'],
+  ['daily','低音','dī yīn','âm trầm (bass)','bass'],
+  ['daily','高音','gāo yīn','âm cao (treble)','treble'],
+  ['daily','功放','gōng fàng','amply','amplifier'],
+  ['daily','降噪','jiàng zào','chống ồn','noise cancellation'],
+  ['daily','麦克风','mài kè fēng','micro','microphone'],
+  ['daily','屏幕','píng mù','màn hình','monitor/screen'],
+  ['daily','支架','zhī jià','giá đỡ/arm màn hình','stand/arm'],
+  ['daily','分辨率','fēn biàn lǜ','độ phân giải','resolution'],
+  ['daily','刷新率','shuā xīn lǜ','tần số quét','refresh rate'],
+  ['daily','机械键盘','jī xiè jiàn pán','bàn phím cơ','mechanical keyboard'],
+  ['daily','鼠标','shǔ biāo','chuột máy tính','mouse'],
+  ['daily','快充','kuài chōng','sạc nhanh','fast charging'],
+  ['daily','充电宝','chōng diàn bǎo','sạc dự phòng','power bank'],
+  ['daily','数据线','shù jù xiàn','cáp dữ liệu','data cable'],
+  ['daily','适配器','shì pèi qì','củ sạc/adapter','adapter'],
+  ['daily','平板电脑','píng bǎn diàn nǎo','máy tính bảng','tablet'],
+
+  // === CÔNG SỞ & GIAO TIẾP VĂN PHÒNG ===
+  ['daily','副工程师','fù gōng chéng shī','phó kỹ sư','vice engineer'],
+  ['daily','面试','miàn shì','phỏng vấn','interview'],
+  ['daily','报到','bào dào','nhận việc/điểm danh','onboarding'],
+  ['daily','辞职','cí zhí','từ chức/nghỉ việc','resign'],
+  ['daily','绩效','jì xiào','hiệu suất/KPI','performance'],
+  ['daily','评估','píng gū','đánh giá','evaluation'],
+  ['daily','升职','shēng zhí','thăng chức','promotion'],
+  ['daily','薪水','xīn shuǐ','tiền lương','salary'],
+  ['daily','报销','bào xiāo','thanh toán hóa đơn/công tác phí','reimbursement'],
+  ['daily','预算','yù suàn','ngân sách','budget'],
+  ['daily','签字','qiān zì','ký tên','signature'],
+  ['daily','合同','hé tóng','hợp đồng','contract'],
+  ['daily','提案','tí àn','đề án/đề xuất','proposal'],
+  ['daily','简报','jiǎn bào','thuyết trình','presentation'],
+  ['daily','幻灯片','huàn dēng piàn','slide thuyết trình','slide'],
+  ['daily','总结','zǒng jié','tổng kết','summary'],
+  ['daily','目标','mù biāo','mục tiêu','goal'],
+  ['daily','策略','cè luè','chiến lược','strategy'],
+  ['daily','挑战','tiǎo zhàn','thử thách','challenge'],
+  ['daily','解决方案','jiě jué fāng àn','giải pháp','solution'],
+  ['daily','部门','bù mén','phòng ban','department'],
+  ['daily','专案','zhuān àn','dự án','project'],
+
+  // === GIẢI TRÍ, ĐỜI SỐNG & DU LỊCH ===
+  ['daily','电影院','diàn yǐng yuàn','rạp chiếu phim','cinema'],
+  ['daily','爆米花','bào mǐ huā','bắp rang bơ','popcorn'],
+  ['daily','首映','shǒu yìng','công chiếu','premiere'],
+  ['daily','动作片','dòng zuò piàn','phim hành động','action movie'],
+  ['daily','科幻片','kē huàn piàn','phim khoa học viễn tưởng','sci-fi movie'],
+  ['daily','动漫','dòng màn','anime/hoạt hình','anime/animation'],
+  ['daily','游戏机','yóu xì jī','máy chơi game','game console'],
+  ['daily','充值','chōng zhí','nạp tiền/thẻ','top up'],
+  ['daily','账号','zhàng hào','tài khoản','account'],
+  ['daily','密码','mì mǎ','mật khẩu','password'],
+  ['daily','解锁','jiě suǒ','m mở khóa','unlock'],
+  ['daily','旅游','lǚ yóu','du lịch','travel'],
+  ['daily','风景','fēng jǐng','phong cảnh','scenery'],
+  ['daily','植物园','zhí wù yuán','vườn bách thảo','botanical garden'],
+  ['daily','公园','gōng yuán','công viên','park'],
+  ['daily','海鲜','hǎi xiān','hải sản','seafood'],
+  ['daily','螃蟹','páng xiè','cua','crab'],
+  ['daily','烤肉','kǎo ròu','thịt nướng','BBQ'],
+  ['daily','聚餐','jù cān','tụ tập ăn uống','dine together'],
+  ['daily','唱歌','chàng gē','hát/karaoke','sing/karaoke'],
+  ['daily','会员','huì yuán','thành viên VIP','VIP member'],
+  ['daily','退款','tuì kuǎn','hoàn tiền','refund'],
+  ['daily','车票','chē piào','vé tàu xe','ticket'],
+// === TỪ ĐỂ HỎI & LIÊN TỪ ===
+  ['daily','为什么','wèi shén me','tại sao','why'],
+  ['daily','怎么','zěn me','thế nào/làm sao','how'],
+  ['daily','什么','shén me','cái gì','what'],
+  ['daily','哪里','nǎ lǐ','ở đâu','where'],
+  ['daily','谁','shéi','ai','who'],
+  ['daily','因为','yīn wèi','bởi vì','because'],
+  ['daily','所以','suǒ yǐ','cho nên','so'],
+  ['daily','但是','dàn shì','nhưng mà','but'],
+  ['daily','如果','rú guǒ','nếu như','if'],
+  ['daily','或者','huò zhě','hoặc là (câu trần thuật)','or'],
+  ['daily','还是','hái shì','hay là (câu hỏi)','or (question)'],
+  ['daily','虽然','suī rán','mặc dù','although'],
+
+  // === THỜI GIAN & TẦN SUẤT ===
+  ['daily','星期一','xīng qī yī','Thứ Hai','Monday'],
+  ['daily','星期日','xīng qī rì','Chủ Nhật','Sunday'],
+  ['daily','周末','zhōu mò','cuối tuần','weekend'],
+  ['daily','去年','qù nián','năm ngoái','last year'],
+  ['daily','明年','míng nián','năm sau','next year'],
+  ['daily','刚才','gāng cái','vừa nãy','just now'],
+  ['daily','马上','mǎ shàng','ngay lập tức','immediately'],
+  ['daily','经常','jīng cháng','thường xuyên','often'],
+  ['daily','有时候','yǒu shí hou','có lúc/đôi khi','sometimes'],
+  ['daily','偶尔','ǒu ěr','thỉnh thoảng','occasionally'],
+  ['daily','永远','yǒng yuǎn','mãi mãi','forever'],
+
+  // === ĐỘNG TỪ SUY NGHĨ & HÀNH ĐỘNG ===
+  ['daily','觉得','jué de','cảm thấy/nghĩ rằng','feel/think'],
+  ['daily','以为','yǐ wéi','tưởng rằng','thought'],
+  ['daily','告诉','gào su','nói với/bảo','tell'],
+  ['daily','问','wèn','hỏi','ask'],
+  ['daily','回答','huí dá','trả lời','answer'],
+  ['daily','准备','zhǔn bèi','chuẩn bị','prepare'],
+  ['daily','决定','jué dìng','quyết định','decide'],
+  ['daily','忘记','wàng jì','quên','forget'],
+  ['daily','记得','jì de','nhớ','remember'],
+  ['daily','希望','xī wàng','hy vọng','hope'],
+  ['daily','需要','xū yào','cần','need'],
+  ['daily','发生','fā shēng','xảy ra','happen'],
+  ['daily','开始','kāi shǐ','bắt đầu','start'],
+  ['daily','结束','jié shù','kết thúc','finish'],
+  ['daily','同意','tóng yì','đồng ý','agree'],
+  ['daily','拒绝','jù jué','từ chối','refuse'],
+  ['daily','相信','xiāng xìn','tin tưởng','believe'],
+  ['daily','了解','liǎo jiě','tìm hiểu/hiểu rõ','understand'],
+  ['daily','改变','gǎi biàn','thay đổi','change'],
+  ['daily','发现','fā xiàn','phát hiện/nhận ra','discover'],
+
+  // === TÍNH TỪ MIÊU TẢ & CẢM XÚC ===
+  ['daily','漂亮','piào liang','xinh đẹp','beautiful'],
+  ['daily','帅','shuài','đẹp trai','handsome'],
+  ['daily','聪明','cōng míng','thông minh','smart'],
+  ['daily','努力','nǔ lì','nỗ lực/chăm chỉ','hardworking'],
+  ['daily','认真','rèn zhēn','nghiêm túc','serious/earnest'],
+  ['daily','清楚','qīng chu','rõ ràng','clear'],
+  ['daily','简单','jiǎn dān','đơn giản','simple'],
+  ['daily','复杂','fù zá','phức tạp','complex'],
+  ['daily','奇怪','qí guài','kỳ lạ','strange'],
+  ['daily','正常','zhèng cháng','bình thường','normal'],
+  ['daily','重要','zhòng yào','quan trọng','important'],
+  ['daily','方便','fāng biàn','tiện lợi','convenient'],
+  ['daily','干净','gān jìng','sạch sẽ','clean'],
+  ['daily','脏','zāng','dơ/bẩn','dirty'],
+  ['daily','危险','wēi xiǎn','nguy hiểm','dangerous'],
+  ['daily','安全','ān quán','an toàn','safe'],
+  ['daily','远','yuǎn','xa','far'],
+  ['daily','近','jìn','gần','near'],
+
+  // === VẬT DỤNG & ĐỊA ĐIỂM THƯỜNG NGÀY ===
+  ['daily','钥匙','yào shi','chìa khóa','key'],
+  ['daily','钱包','qián bāo','ví tiền','wallet'],
+  ['daily','护照','hù zhào','hộ chiếu','passport'],
+  ['daily','行李','xíng li','hành lý','luggage'],
+  ['daily','电梯','diàn tī','thang máy','elevator'],
+  ['daily','楼梯','lóu tī','cầu thang','stairs'],
+  ['daily','洗手间','xǐ shǒu jiān','nhà vệ sinh','restroom'],
+  ['daily','餐厅','cān tīng','nhà hàng/căng tin','restaurant/canteen'],
+  ['daily','公司','gōng sī','công ty','company'],
+  ['daily','学校','xué xiào','trường học','school'],
+  ['daily','警察','jǐng chá','cảnh sát','police'],
+  ['daily','药店','yào diàn','tiệm thuốc','pharmacy'],
+
+  // === CÂU CỬA MIỆNG & TỪ ĐỆM ===
+  ['daily','当然','dāng rán','đương nhiên','of course'],
+  ['daily','也许','yě xǔ','có lẽ','maybe'],
+  ['daily','一定','yí dìng','nhất định','definitely'],
+  ['daily','随便','suí biàn','tùy ý/sao cũng được','casual/whatever'],
+  ['daily','小心','xiǎo xīn','cẩn thận','careful'],
+  ['daily','放心','fàng xīn','yên tâm','rest assured'],
+  ['daily','注意','zhù yì','chú ý','pay attention'],
+  ['daily','加油','jiā yóu','cố lên','cheer up'],
+  ['daily','太棒了','tài bàng le','tuyệt quá','awesome'],
+  ['daily','糟糕','zāo gāo','hỏng bét/tồi tệ','terrible'],
+// === ĐẠI TỪ & DANH XƯNG ===
+  ['daily','大家','dà jiā','mọi người','everyone'],
+  ['daily','别人','bié rén','người khác','others'],
+  ['daily','同事','tóng shì','đồng nghiệp','colleague'],
+  ['daily','客人','kè rén','khách/khách hàng','guest/customer'],
+  ['daily','男','nán','nam/con trai','male'],
+  ['daily','女','nǚ','nữ/con gái','female'],
+
+  // === LƯỢNG TỪ CƠ BẢN (Dùng mọi lúc mọi nơi) ===
+  ['daily','个','gè','cái/con/người (lượng từ chung)','piece/item'],
+  ['daily','件','jiàn','chiếc/kiện (quần áo, việc)','piece'],
+  ['daily','本','běn','quyển/cuốn (sách)','book/volume'],
+  ['daily','次','cì','lần','time/occurrence'],
+  ['daily','杯','bēi','ly/cốc','cup/glass'],
+  ['daily','瓶','píng','chai/lọ','bottle'],
+
+  // === ĐỘNG TỪ SINH HOẠT CỐT LÕI ===
+  ['daily','买','mǎi','mua','buy'],
+  ['daily','卖','mài','bán','sell'],
+  ['daily','给','gěi','cho/đưa cho','give'],
+  ['daily','找','zhǎo','tìm kiếm/thối tiền','look for/change'],
+  ['daily','等','děng','đợi/chờ','wait'],
+  ['daily','拿','ná','cầm/lấy','take/hold'],
+  ['daily','放','fàng','đặt/để','put/place'],
+  ['daily','穿','chuān','mặc/mang (quần áo, giày)','wear/put on'],
+  ['daily','坐','zuò','ngồi','sit'],
+  ['daily','站','zhàn','đứng','stand'],
+  ['daily','住','zhù','sống/cư trú','live/stay'],
+  ['daily','玩','wán','chơi','play'],
+  ['daily','笑','xiào','cười','laugh/smile'],
+  ['daily','哭','kū','khóc','cry'],
+  ['daily','用','yòng','dùng/sử dụng','use'],
+  ['daily','做','zuò','làm','do/make'],
+
+  // === TRẠNG TỪ MỨC ĐỘ & TẦN SUẤT ===
+  ['daily','很','hěn','rất','very'],
+  ['daily','非常','fēi cháng','vô cùng','extremely'],
+  ['daily','最','zuì','nhất','most'],
+  ['daily','真','zhēn','thật sự','really'],
+  ['daily','太','tài','quá/lắm','too'],
+  ['daily','更','gèng','càng/hơn','more'],
+  ['daily','都','dōu','đều','all/both'],
+  ['daily','也','yě','cũng','also'],
+  ['daily','还','hái','vẫn/còn','still/yet'],
+  ['daily','就','jiù','liền/ngay/thì','then/just'],
+  ['daily','才','cái','mới (chỉ sự muộn)','only then'],
+
+  // === TÍNH TỪ GIAO TIẾP THƯỜNG NGÀY ===
+  ['daily','错','cuò','sai','wrong'],
+  ['daily','对','duì','đúng','right/correct'],
+  ['daily','长','cháng','dài','long'],
+  ['daily','短','duǎn','ngắn','short'],
+  ['daily','高','gāo','cao','tall/high'],
+  ['daily','低','dī','thấp','low'],
+  ['daily','胖','pàng','béo/mập','fat'],
+  ['daily','瘦','shòu','gầy/ốm','thin'],
+  ['daily','一样','yí yàng','giống nhau','same'],
+  ['daily','特别','tè bié','đặc biệt','special'],
+  ['daily','满','mǎn','đầy','full'],
+  ['daily','空','kōng','trống rỗng','empty'],
+
+  // === THỜI GIAN & ĐƠN VỊ ===
+  ['daily','年','nián','năm','year'],
+  ['daily','月','yuè','tháng','month'],
+  ['daily','日','rì','ngày','day'],
+  ['daily','小时','xiǎo shí','giờ/tiếng','hour'],
+  ['daily','分钟','fēn zhōng','phút','minute'],
+  ['daily','早','zǎo','sớm','early'],
+  ['daily','晚','wǎn','muộn/khuya','late'],
+  ['daily','半','bàn','rưỡi/nửa','half'],
+
+  // === PHƯƠNG HƯỚNG & VỊ TRÍ ===
+  ['daily','上','shàng','trên','up/on'],
+  ['daily','下','xià','dưới','down/under'],
+  ['daily','里','lǐ','trong','inside'],
+  ['daily','外','wài','ngoài','outside'],
+  ['daily','旁边','páng biān','bên cạnh','beside/next to'],
+  ['daily','中间','zhōng jiān','ở giữa','middle'],
+
+  // === ĐỒ VẬT & DANH TỪ CƠ BẢN ===
+  ['daily','钱','qián','tiền','money'],
+  ['daily','衣服','yī fu','quần áo','clothes'],
+  ['daily','鞋子','xié zi','giày','shoes'],
+  ['daily','包','bāo','túi xách/balo','bag'],
+  ['daily','书','shū','sách','book'],
+  ['daily','纸','zhǐ','giấy','paper'],
+  ['daily','笔','bǐ','bút','pen'],
+  ['daily','水杯','shuǐ bēi','cốc nước','water cup'],
+  ['daily','灯','dēng','đèn','light/lamp'],
+  ['daily','票','piào','vé','ticket'],
+  ['daily','问题','wèn tí','vấn đề/câu hỏi','problem/question'],
+  ['daily','事情','shì qing','sự việc/chuyện','matter/thing'],
+  ['daily','名字','míng zi','tên','name'],
+  ['daily','颜色','yán sè','màu sắc','color'],
+  ['daily','字','zì','chữ','word/character'],
+// === GIA ĐÌNH & CÁC MỐI QUAN HỆ ===
+  ['daily','爷爷','yé ye','ông nội','grandfather'],
+  ['daily','奶奶','nǎi nai','bà nội','grandmother'],
+  ['daily','外公','wài gōng','ông ngoại','maternal grandfather'],
+  ['daily','外婆','wài pó','bà ngoại','maternal grandmother'],
+  ['daily','叔叔','shū shu','chú/bác trai','uncle'],
+  ['daily','阿姨','ā yí','dì/cô/bác gái','aunt'],
+  ['daily','丈夫','zhàng fu','chồng (trang trọng)','husband'],
+  ['daily','妻子','qī zi','vợ (trang trọng)','wife'],
+  ['daily','先生','xiān sheng','quý ngài/anh','Mr./gentleman'],
+  ['daily','小姐','xiǎo jiě','cô gái/tiểu thư','Miss/lady'],
+  ['daily','小孩','xiǎo hái','trẻ em','child'],
+  ['daily','老人','lǎo rén','người già','elderly'],
+  ['daily','邻居','lín jū','hàng xóm','neighbor'],
+
+  // === BỘ PHẬN CƠ THỂ ===
+  ['daily','头','tóu','đầu','head'],
+  ['daily','头发','tóu fa','tóc','hair'],
+  ['daily','脸','liǎn','khuôn mặt','face'],
+  ['daily','眼睛','yǎn jing','mắt','eyes'],
+  ['daily','鼻子','bí zi','mũi','nose'],
+  ['daily','嘴巴','zuǐ ba','miệng','mouth'],
+  ['daily','牙齿','yá chǐ','răng','teeth'],
+  ['daily','耳朵','ěr duo','tai','ears'],
+  ['daily','手','shǒu','tay','hand'],
+  ['daily','脚','jiǎo','chân/bàn chân','foot'],
+  ['daily','腿','tuǐ','cẳng chân','leg'],
+  ['daily','胳膊','gē bo','cánh tay','arm'],
+  ['daily','肚子','dù zi','bụng','stomach'],
+  ['daily','背','bèi','lưng','back'],
+
+  // === QUẦN ÁO & MÀU SẮC ===
+  ['daily','裤子','kù zi','quần','pants'],
+  ['daily','裙子','qún zi','váy','skirt'],
+  ['daily','衬衫','chèn shān','áo sơ mi','shirt'],
+  ['daily','外套','wài tào','áo khoác','coat/jacket'],
+  ['daily','袜子','wà zi','tất/vớ','socks'],
+  ['daily','帽子','mào zi','mũ/nón','hat'],
+  ['daily','红','hóng','đỏ','red'],
+  ['daily','黄','huáng','vàng','yellow'],
+  ['daily','蓝','lán','xanh dương','blue'],
+  ['daily','绿','lǜ','xanh lá','green'],
+  ['daily','黑','hēi','đen','black'],
+  ['daily','白','bái','trắng','white'],
+  ['daily','灰','huī','xám','gray'],
+  ['daily','尺码','chǐ mǎ','kích cỡ/size','size'],
+
+  // === ĐỒ DÙNG TRONG NHÀ & VỆ SINH ===
+  ['daily','电视','diàn shì','tivi','TV'],
+  ['daily','空调','kōng tiáo','điều hòa','air conditioner'],
+  ['daily','冰箱','bīng xiāng','tủ lạnh','refrigerator'],
+  ['daily','洗衣机','xǐ yī jī','máy giặt','washing machine'],
+  ['daily','沙发','shā fā','ghế sofa','sofa'],
+  ['daily','被子','bèi zi','cái chăn/mền','blanket'],
+  ['daily','枕头','zhěn tou','cái gối','pillow'],
+  ['daily','牙刷','yá shuā','bàn chải đánh răng','toothbrush'],
+  ['daily','牙膏','yá gāo','kem đánh răng','toothpaste'],
+  ['daily','毛巾','máo jīn','khăn mặt','towel'],
+  ['daily','梳子','shū zi','cái lược','comb'],
+  ['daily','洗发水','xǐ fà shuǐ','dầu gội đầu','shampoo'],
+  ['daily','沐浴露','mù yù lù','sữa tắm','body wash'],
+  ['daily','卫生纸','wèi shēng zhǐ','giấy vệ sinh','toilet paper'],
+  ['daily','垃圾桶','lā jī tǒng','thùng rác','trash can'],
+
+  // === TRÁI CÂY, THỰC PHẨM & DỤNG CỤ ĂN UỐNG ===
+  ['daily','苹果','píng guǒ','quả táo','apple'],
+  ['daily','香蕉','xiāng jiāo','quả chuối','banana'],
+  ['daily','西瓜','xī guā','dưa hấu','watermelon'],
+  ['daily','葡萄','pú tao','quả nho','grape'],
+  ['daily','草莓','cǎo méi','dâu tây','strawberry'],
+  ['daily','牛奶','niú nǎi','sữa bò','milk'],
+  ['daily','果汁','guǒ zhī','nước ép hoa quả','fruit juice'],
+  ['daily','汤','tāng','món súp/canh','soup'],
+  ['daily','盐','yán','muối','salt'],
+  ['daily','糖','táng','đường','sugar'],
+  ['daily','冰','bīng','đá (lạnh)','ice'],
+  ['daily','菜单','cài dān','thực đơn','menu'],
+  ['daily','点菜','diǎn cài','gọi món','order food'],
+  ['daily','买单','mǎi dān','thanh toán/tính tiền','pay the bill'],
+  ['daily','碗','wǎn','cái bát/chén','bowl'],
+  ['daily','盘子','pán zi','cái đĩa','plate'],
+  ['daily','筷子','kuài zi','đôi đũa','chopsticks'],
+  ['daily','叉子','chā zi','cái dĩa/nĩa','fork'],
+  ['daily','勺子','sháo zi','cái thìa/muỗng','spoon'],
+
+  // === PHƯƠNG TIỆN, ĐỊA ĐIỂM & ĐƯỜNG PHỐ ===
+  ['daily','地铁','dì tiě','tàu điện ngầm','subway'],
+  ['daily','红绿灯','hóng lǜ dēng','đèn giao thông','traffic light'],
+  ['daily','十字路口','shí zì lù kǒu','ngã tư','crossroad'],
+  ['daily','迷路','mí lù','lạc đường','get lost'],
+  ['daily','东','dōng','hướng Đông','East'],
+  ['daily','西','xī','hướng Tây','West'],
+  ['daily','南','nán','hướng Nam','South'],
+  ['daily','北','běi','hướng Bắc','North'],
+  ['daily','邮局','yóu jú','bưu điện','post office'],
+  ['daily','饭店','fàn diàn','khách sạn/nhà hàng','hotel/restaurant'],
+  ['daily','宾馆','bīn guǎn','nhà nghỉ/khách sạn','hotel/guesthouse'],
+  ['daily','图书馆','tú shū guǎn','thư viện','library'],
+  ['daily','体育馆','tǐ yù guǎn','nhà thi đấu','gymnasium'],
+  ['daily','健身房','jiàn shēn fáng','phòng gym','gym'],
+
+  // === ĐỘNG TỪ CHỈ HÀNH ĐỘNG CƠ BẢN ===
+  ['daily','借','jiè','mượn/cho mượn','borrow/lend'],
+  ['daily','还','huán','trả lại (đồ vật)','return'],
+  ['daily','丢','diū','làm mất/vứt bỏ','lose/throw'],
+  ['daily','跑','pǎo','chạy','run'],
+  ['daily','跳','tiào','nhảy','jump'],
+  ['daily','躺','tǎng','nằm','lie down'],
+  ['daily','推','tuī','đẩy','push'],
+  ['daily','拉','lā','kéo','pull'],
+  ['daily','抱','bào','ôm','hug/hold'],
+  ['daily','洗','xǐ','rửa/giặt','wash'],
+  ['daily','刷','shuā','chải/đánh (răng)','brush'],
+  ['daily','戴','dài','đeo (kính, mũ, đồng hồ)','wear (accessories)'],
+  ['daily','休息','xiū xi','nghỉ ngơi','rest'],
+  ['daily','锻炼','duàn liàn','rèn luyện/tập thể dục','exercise'],
+  ['daily','打扫','dǎ sǎo','dọn dẹp/quét tước','clean up'],
+  ['daily','翻译','fān yì','dịch thuật','translate'],
+  ['daily','打印','dǎ yìn','in ấn','print'],
+  ['daily','复印','fù yìn','photocopy','copy'],
+
+  // === TÍNH TỪ & CẢM GIÁC THỂ CHẤT ===
+  ['daily','笨','bèn','ngốc/vụng về','stupid/clumsy'],
+  ['daily','勤奋','qín fèn','siêng năng','diligent'],
+  ['daily','懒','lǎn','lười biếng','lazy'],
+  ['daily','苦','kǔ','đắng/khổ','bitter'],
+  ['daily','软','ruǎn','mềm','soft'],
+  ['daily','硬','yìng','cứng','hard'],
+  ['daily','深','shēn','sâu','deep'],
+  ['daily','浅','qiǎn','nông/cạn/nhạt','shallow/light'],
+  ['daily','粗','cū','thô/to','thick/rough'],
+  ['daily','细','xì','mảnh/nhỏ','thin/fine'],
+  ['daily','宽','kuān','rộng','wide'],
+  ['daily','窄','zhǎi','hẹp','narrow'],
+  ['daily','香','xiāng','thơm','fragrant'],
+  ['daily','臭','chòu','hôi/thối','stinky'],
+  ['daily','安静','ān jìng','yên tĩnh','quiet'],
+  ['daily','吵','chǎo','ồn ào','noisy'],
+
+  // === THỜI TIẾT & TỰ NHIÊN ===
+  ['daily','春','chūn','mùa xuân','spring'],
+  ['daily','夏','xià','mùa hè','summer'],
+  ['daily','秋','qiū','mùa thu','autumn'],
+  ['daily','冬','dōng','mùa đông','winter'],
+  ['daily','雪','xuě','tuyết','snow'],
+  ['daily','气温','qì wēn','nhiệt độ không khí','air temperature'],
+  ['daily','太阳','tài yáng','mặt trời','sun'],
+  ['daily','月亮','yuè liang','mặt trăng','moon'],
+  ['daily','星星','xīng xing','ngôi sao','star'],
+// === GIÁO DỤC & HỌC TẬP ===
+  ['daily','考试','kǎo shì','thi cử','exam'],
+  ['daily','成绩','chéng jì','thành tích/điểm số','grade/score'],
+  ['daily','毕业','bì yè','tốt nghiệp','graduate'],
+  ['daily','练习','liàn xí','luyện tập/bài tập','practice'],
+  ['daily','句子','jù zi','câu','sentence'],
+  ['daily','词语','cí yǔ','từ vựng','vocabulary'],
+  ['daily','语法','yǔ fǎ','ngữ pháp','grammar'],
+  ['daily','黑板','hēi bǎn','bảng đen','blackboard'],
+  ['daily','课本','kè běn','sách giáo khoa','textbook'],
+  ['daily','笔记本','bǐ jì běn','vở ghi chép/laptop','notebook/laptop'],
+  ['daily','辅导','fǔ dǎo','phụ đạo/hướng dẫn','tutoring'],
+  ['daily','留学','liú xué','du học','study abroad'],
+  ['daily','教授','jiào shòu','giáo sư','professor'],
+  ['daily','题目','tí mù','tiêu đề/câu hỏi','title/question'],
+  ['daily','答案','dá àn','đáp án','answer'],
+  ['daily','班级','bān jí','lớp học','class'],
+
+  // === CÔNG VIỆC & PHÁT TRIỂN SỰ NGHIỆP ===
+  ['daily','计划','jì huà','kế hoạch','plan'],
+  ['daily','经验','jīng yàn','kinh nghiệm','experience'],
+  ['daily','任务','rèn wu','nhiệm vụ','task'],
+  ['daily','责任','zé rèn','trách nhiệm','responsibility'],
+  ['daily','态度','tài du','thái độ','attitude'],
+  ['daily','竞争','jìng zhēng','cạnh tranh','competition'],
+  ['daily','压力','yā lì','áp lực','pressure'],
+  ['daily','讨论','tǎo lùn','thảo luận','discuss'],
+  ['daily','意见','yì jiàn','ý kiến','opinion'],
+  ['daily','建议','jiàn yì','kiến nghị/khuyên','suggest/advise'],
+  ['daily','调查','diào chá','điều tra','investigate'],
+  ['daily','规定','guī dìng','quy định','regulation'],
+  ['daily','解决','jiě jué','giải quyết','solve'],
+  ['daily','提供','tí gōng','cung cấp','provide'],
+  ['daily','安排','ān pái','sắp xếp','arrange'],
+  ['daily','成功','chéng gōng','thành công','success'],
+  ['daily','失败','shī bài','thất bại','failure'],
+  ['daily','发展','fā zhǎn','phát triển','develop'],
+  ['daily','完成','wán chéng','hoàn thành','finish/complete'],
+
+  // === TÀI CHÍNH, MUA SẮM & KINH DOANH ===
+  ['daily','信用卡','xìn yòng kǎ','thẻ tín dụng','credit card'],
+  ['daily','收据','shōu jù','biên lai','receipt'],
+  ['daily','免费','miǎn fèi','miễn phí','free of charge'],
+  ['daily','打折','dǎ zhé','giảm giá','discount'],
+  ['daily','降价','jiàng jià','hạ giá','price drop'],
+  ['daily','顾客','gù kè','khách hàng','customer/client'],
+  ['daily','售货员','shòu huò yuán','nhân viên bán hàng','salesperson'],
+  ['daily','牌子','pái zi','nhãn hiệu/thương hiệu','brand'],
+  ['daily','零钱','líng qián','tiền lẻ','change (money)'],
+  ['daily','浪费','làng fèi','lãng phí','waste'],
+  ['daily','节约','jié yuē','tiết kiệm','save/economize'],
+  ['daily','收入','shōu rù','thu nhập','income'],
+  ['daily','穷','qióng','nghèo','poor'],
+  ['daily','富','fù','giàu','rich'],
+  ['daily','质量','zhì liàng','chất lượng','quality'],
+  ['daily','生意','shēng yi','việc buôn bán/kinh doanh','business'],
+  ['daily','价格','jià gé','giá cả','price'],
+  ['daily','人民币','rén mín bì','Nhân dân tệ','RMB'],
+
+  // === ĐỘNG VẬT & THIÊN NHIÊN ===
+  ['daily','猫','māo','con mèo','cat'],
+  ['daily','狗','gǒu','con chó','dog'],
+  ['daily','鸟','niǎo','con chim','bird'],
+  ['daily','鱼','yú','con cá','fish'],
+  ['daily','牛','niú','con bò','cow'],
+  ['daily','马','mǎ','con ngựa','horse'],
+  ['daily','羊','yáng','con cừu/dê','sheep/goat'],
+  ['daily','猪','zhū','con lợn/heo','pig'],
+  ['daily','树','shù','cái cây','tree'],
+  ['daily','草','cǎo','cỏ','grass'],
+  ['daily','花','huā','hoa','flower'],
+  ['daily','森林','sēn lín','rừng','forest'],
+  ['daily','环境','huán jìng','môi trường','environment'],
+  ['daily','污染','wū rǎn','ô nhiễm','pollution'],
+  ['daily','世界','shì jiè','thế giới','world'],
+  ['daily','国家','guó jiā','quốc gia','country'],
+  ['daily','城市','chéng shì','thành phố','city'],
+  ['daily','农村','nóng cūn','nông thôn','countryside'],
+
+  // === SỨC KHỎE, Y TẾ & THỂ THAO ===
+  ['daily','护士','hù shi','y tá','nurse'],
+  ['daily','药房','yào fáng','hiệu thuốc','pharmacy'],
+  ['daily','检查','jiǎn chá','kiểm tra/khám','check/examine'],
+  ['daily','治病','zhì bìng','chữa bệnh','treat illness'],
+  ['daily','疼','téng','đau','pain/ache'],
+  ['daily','咳嗽','ké sou','ho','cough'],
+  ['daily','血液','xuè yè','máu','blood'],
+  ['daily','骨头','gǔ tou','xương','bone'],
+  ['daily','胃','wèi','dạ dày/bao tử','stomach'],
+  ['daily','健康','jiàn kāng','khỏe mạnh','healthy'],
+  ['daily','精神','jīng shén','tinh thần','spirit/mind'],
+  ['daily','疲劳','pí láo','mệt mỏi/rã rời','fatigued'],
+  ['daily','篮球','lán qiú','bóng rổ','basketball'],
+  ['daily','足球','zú qiú','bóng đá','football/soccer'],
+  ['daily','游泳','yóu yǒng','bơi lội','swim'],
+  ['daily','跑步','pǎo bù','chạy bộ','jogging'],
+  ['daily','爬山','pá shān','leo núi','mountain climbing'],
+  ['daily','比赛','bǐ sài','trận đấu/cuộc thi','match/competition'],
+  ['daily','赢','yíng','thắng','win'],
+  ['daily','输','shū','thua','lose'],
+
+  // === NGHỆ THUẬT, SỞ THÍCH & CÔNG NGHỆ ===
+  ['daily','艺术','yì shù','nghệ thuật','art'],
+  ['daily','音乐','yīn yuè','âm nhạc','music'],
+  ['daily','钢琴','gāng qín','đàn piano','piano'],
+  ['daily','吉他','jí tā','đàn guitar','guitar'],
+  ['daily','照相机','zhào xiàng jī','máy ảnh','camera'],
+  ['daily','照片','zhào piàn','bức ảnh','photo'],
+  ['daily','上网','shàng wǎng','lên mạng','surf the internet'],
+  ['daily','网站','wǎng zhàn','trang web','website'],
+  ['daily','游戏','yóu xì','trò chơi','game'],
+  ['daily','新闻','xīn wén','tin tức','news'],
+  ['daily','故事','gù shi','câu chuyện','story'],
+  ['daily','文章','wén zhāng','bài viết/bài văn','article/essay'],
+  ['daily','杂志','zá zhì','tạp chí','magazine'],
+
+  // === TỪ CHỈ CẢM XÚC, THÁI ĐỘ & TÍNH CÁCH ===
+  ['daily','伤心','shāng xīn','đau lòng/buồn','sad/broken-hearted'],
+  ['daily','害羞','hài xiū','xấu hổ/ngại','shy'],
+  ['daily','骄傲','jiāo ào','tự hào/kiêu ngạo','proud/arrogant'],
+  ['daily','兴奋','xīng fèn','hưng phấn/hào hứng','excited'],
+  ['daily','孤单','gū dān','c cô đơn','lonely'],
+  ['daily','无聊','wú liáo','nhàm chán','boring'],
+  ['daily','轻松','qīng sōng','nhẹ nhõm/thoải mái','relaxed'],
+  ['daily','幽默','yōu mò','hài hước','humorous'],
+  ['daily','诚实','chéng shí','thành thật','honest'],
+  ['daily','粗心','cū xīn','cẩu thả/bất cẩn','careless'],
+  ['daily','严格','yán gé','nghiêm khắc','strict'],
+  ['daily','活泼','huó pō','hoạt bát','lively'],
+  ['daily','积极','jī jí','tích cực','positive/active'],
+  ['daily','勇敢','yǒng gǎn','dũng cảm','brave'],
+  ['daily','优秀','yōu xiù','xuất sắc','excellent'],
+  ['daily','浪漫','làng màn','lãng mạn','romantic'],
+
+  // === CÁC ĐỘNG TỪ MỞ RỘNG (GIAO TIẾP HÀNG NGÀY) ===
+  ['daily','保证','bǎo zhèng','bảo đảm','guarantee'],
+  ['daily','抱歉','bào qiàn','xin lỗi/ân hận','apologize/sorry'],
+  ['daily','表达','biǎo dá','biểu đạt/diễn đạt','express'],
+  ['daily','表扬','biǎo yáng','tuyên dương/khen ngợi','praise'],
+  ['daily','擦','cā','lau/chùi','wipe'],
+  ['daily','猜','cāi','đoán','guess'],
+  ['daily','尝','cháng','nếm','taste'],
+  ['daily','出现','chū xiàn','xuất hiện','appear'],
+  ['daily','抽烟','chōu yān','hút thuốc','smoke'],
+  ['daily','打扰','dǎ rǎo','quấy rầy/làm phiền','disturb'],
+  ['daily','代替','dài tì','thay thế','replace/substitute'],
+  ['daily','道歉','dào qiàn','xin lỗi','apologize'],
+  ['daily','感谢','gǎn xiè','cảm tạ/cảm ơn','thank'],
+  ['daily','逛','guàng','đi dạo/dạo phố','stroll'],
+  ['daily','害怕','hài pà','sợ hãi','afraid/fear'],
+  ['daily','欢迎','huān yíng','hoan nghênh/chào mừng','welcome'],
+  ['daily','结婚','jié hūn','kết hôn','marry'],
+  ['daily','聚会','jù huì','tụ tập/liên hoan','gathering/party'],
+  ['daily','考虑','kǎo lǜ','suy nghĩ/cân nhắc','consider'],
+  ['daily','离开','lí kāi','rời khỏi','leave'],
+  ['daily','骗','piàn','lừa gạt','deceive/cheat'],
+  ['daily','敲','qiāo','gõ (cửa)','knock'],
+  ['daily','扔','rēng','ném/vứt','throw'],
+  ['daily','申请','shēn qǐng','xin/đăng ký','apply'],
+  ['daily','适应','shì yìng','thích ứng/làm quen','adapt'],
+  ['daily','熟悉','shú xī','quen thuộc','familiar'],
+  ['daily','提醒','tí xǐng','nhắc nhở','remind'],
+  ['daily','习惯','xí guàn','thói quen/quen với','habit/be used to'],
+  ['daily','醒','xǐng','tỉnh/thức dậy','wake up'],
+  ['daily','吸引','xī yǐn','thu hút','attract'],
+  ['daily','遇到','yù dào','gặp phải','meet/encounter'],
+  ['daily','原谅','yuán liàng','tha thứ','forgive'],
+  ['daily','证明','zhèng míng','chứng minh','prove'],
+  ['daily','祝贺','zhù hè','chúc mừng','congratulate'],
+
+  // === CÁC TÍNH TỪ & TRẠNG TỪ MỞ RỘNG ===
+  ['daily','精彩','jīng cǎi','đặc sắc/tuyệt vời','wonderful'],
+  ['daily','麻烦','má fan','phiền phức','troublesome'],
+  ['daily','破','pò','rách/vỡ','broken/torn'],
+  ['daily','讨厌','tǎo yàn','đáng ghét/ghét','disgusting/hate'],
+  ['daily','详细','xiáng xì','chi tiết','detailed'],
+  ['daily','严重','yán zhòng','nghiêm trọng','serious'],
+  ['daily','故意','gù yì','cố ý','intentionally'],
+  ['daily','稍微','shāo wēi','hơi/một chút','slightly'],
+  ['daily','大概','dà gài','khoảng/có lẽ','probably/roughly'],
+  ['daily','到底','dào dǐ','rốt cuộc','after all/in the end'],
+  ['daily','重新','chóng xīn','lại từ đầu/làm lại','again/anew'],
+  ['daily','从来','cóng lái','từ trước tới nay','always/never'],
+  ['daily','到处','dào chù','khắp nơi','everywhere'],
+  ['daily','只好','zhǐ hǎo','đành phải','have to/be forced to'],
+  ['daily','专门','zhuān mén','chuyên môn/đặc biệt','specially'],
+  ['daily','最好','zuì hǎo','tốt nhất là','had better'],
+
+  // === LƯỢNG TỪ & ĐƠN VỊ ĐO LƯỜNG CƠ BẢN ===
+  ['daily','公斤','gōng jīn','kilogram','kg'],
+  ['daily','公里','gōng lǐ','kilometer','km'],
+  ['daily','米','mǐ','mét','meter'],
+  ['daily','台','tái','chiếc/cỗ (máy móc)','measure word (machines)'],
+  ['daily','辆','liàng','chiếc (xe cộ)','measure word (vehicles)'],
+  ['daily','张','zhāng','tờ/tấm/chiếc (bàn)','measure word (flat objects)'],
+  ['daily','把','bǎ','chiếc (ghế/ô/dao)','measure word (chairs/umbrellas)'],
+  ['daily','双','shuāng','đôi (giày/đũa)','pair'],
+  ['daily','条','tiáo','con/sợi (đường/sông/cá/quần)','measure word (long/narrow)'],
+  ['daily','段','duàn','đoạn (đường/thời gian)','section/paragraph'],
+  ['daily','块','kuài','cục/tảng/đồng (tiền)','piece/chunk/yuan'],
+  ['daily','种','zhǒng','loại/chủng loại','kind/type'],
+
+  // === ĐẠI TỪ & TỪ NỐI (Rất quan trọng để ghép câu) ===
+  ['daily','任何','rèn hé','bất kỳ','any'],
+  ['daily','一切','yí qiè','tất cả','everything'],
+  ['daily','自己','zì jǐ','bản thân/tự mình','oneself'],
+  ['daily','另外','lìng wài','ngoài ra','in addition'],
+  ['daily','除了','chú le','ngoài ra/trừ... ra','except/besides'],
+  ['daily','即使','jí shǐ','cho dù/ngay cả khi','even if'],
+  ['daily','不但','bú dàn','không những','not only'],
+  ['daily','而且','ér qiě','mà còn','but also'],
+  ['daily','否则','fǒu zé','nếu không thì','otherwise'],
+  ['daily','然而','rán ér','tuy nhiên','however'],
+
+];
+
+let vocab = VOCAB_DATA.map(v => ({s: v[0], hanzi: v[1], pinyin: v[2], vi: v[3], en: v[4]}));
+let sentences = [
+  // 1. Quản lý Sản xuất & Tiến độ
+  {s:'factory', hanzi:"今天的产量是多少？", pinyin:"Jīntiān de chǎnliàng shì duōshao?", vi:"Sản lượng hôm nay là bao nhiêu?", en:"What is today's output?"},
+  {s:'factory', hanzi:"我们需要加班赶进度。", pinyin:"Wǒmen xūyào jiābān gǎn jìndù.", vi:"Chúng ta cần tăng ca chạy tiến độ.", en:"We need to work overtime to catch up with the schedule."},
+  {s:'factory', hanzi:"这条流水线今天停机了三次。", pinyin:"Zhè tiáo liúshuǐxiàn jīntiān tíngjī le sān cì.", vi:"Dây chuyền này hôm nay đã dừng máy 3 lần rồi.", en:"This assembly line has stopped three times today."},
+  {s:'factory', hanzi:"物料还没到，没法开工。", pinyin:"Wùliào hái méi dào, méi fǎ kāigōng.", vi:"Vật tư chưa đến, không thể bắt đầu làm.", en:"Materials haven't arrived, can't start working."},
+  {s:'factory', hanzi:"这批货什么时候能交期？", pinyin:"Zhè pī huò shénme shíhou néng jiāoqī?", vi:"Lô hàng này bao giờ đến hạn giao?", en:"When is the delivery deadline for this batch?"},
+  {s:'factory', hanzi:"赶紧叫维修部的人过来。", pinyin:"Gǎnjǐn jiào wéixiū bù de rén guòlái.", vi:"Mau gọi người bên bộ phận bảo trì qua đây.", en:"Call the maintenance department over quickly."},
+  {s:'factory', hanzi:"库存盘点做完了吗？", pinyin:"Kùcún pándiǎn zuò wán le ma?", vi:"Kiểm kê kho làm xong chưa?", en:"Is the inventory check done?"},
+  {s:'factory', hanzi:"把这些不良品放到废品区。", pinyin:"Bǎ zhèxiē bùliángpǐn fàng dào fèipǐn qū.", vi:"Để những hàng lỗi này vào khu phế phẩm.", en:"Put these defective products in the scrap area."},
+  
+  // 2. Thiết kế, Bản vẽ & R&D
+  {s:'factory', hanzi:"请把最新的CAD图纸发给生产线。", pinyin:"Qǐng bǎ zuìxīn de CAD túzhǐ fā gěi shēngchǎnxiàn.", vi:"Vui lòng gửi bản vẽ CAD mới nhất cho dây chuyền sản xuất.", en:"Please send the latest CAD drawing to the production line."},
+  {s:'factory', hanzi:"这个三维模型有几何错误，需要修改。", pinyin:"Zhège sānwéi móxíng yǒu jǐhé cuòwù, xūyào xiūgǎi.", vi:"Mô hình 3D này có lỗi hình học, cần phải sửa đổi.", en:"This 3D model has geometric errors and needs to be modified."},
+  {s:'factory', hanzi:"热管的弯曲角度不对，装不进去。", pinyin:"Règuǎn de wānqū jiǎodù bù duì, zhuāng bù jìnqù.", vi:"Góc uốn của ống tản nhiệt không đúng, lắp không vào được.", en:"The bending angle of the heat pipe is wrong, it can't be installed."},
+  {s:'factory', hanzi:"这个散热器设计可以降温多少度？", pinyin:"Zhège sànrèqì shèjì kěyǐ jiàngwēn duōshǎo dù?", vi:"Thiết kế tản nhiệt này có thể giảm nhiệt độ bao nhiêu độ?", en:"How many degrees can this heatsink design reduce?"},
+  {s:'factory', hanzi:"导热硅脂涂得太厚了，影响散热效果。", pinyin:"Dǎorè guīzhī tú de tài hòu le, yǐngxiǎng sànrè xiàoguǒ.", vi:"Keo tản nhiệt bôi dày quá, ảnh hưởng đến hiệu quả tản nhiệt.", en:"The thermal paste is applied too thick, affecting cooling performance."},
+  {s:'factory', hanzi:"我们需要测试一下风扇的噪音和转速。", pinyin:"Wǒmen xūyào cèshì yīxià fēngshàn de zàoyīn hé zhuǎnsù.", vi:"Chúng ta cần kiểm tra tiếng ồn và tốc độ quay của quạt.", en:"We need to test the fan's noise and RPM."},
+  {s:'factory', hanzi:"客户要求更改外观设计。", pinyin:"Kèhù yāoqiú gēnggǎi wàiguān shèjì.", vi:"Khách hàng yêu cầu thay đổi thiết kế ngoại quan.", en:"The customer requests to change the appearance design."},
+  {s:'factory', hanzi:"打样测试通过了吗？", pinyin:"Dǎyàng cèshì tōngguò le ma?", vi:"Kiểm tra mẫu thử đã thông qua chưa?", en:"Has the sample testing passed?"},
+  {s:'factory', hanzi:"参数还没确认，不能批量生产。", pinyin:"Cānshù hái méi quèrèn, bùnéng pīliàng shēngchǎn.", vi:"Thông số chưa xác nhận, không thể sản xuất hàng loạt.", en:"Parameters are not confirmed, mass production cannot start."},
+
+  // 3. Chất lượng & Đo lường
+  {s:'factory', hanzi:"这个零件不合格，公差太大了。", pinyin:"Zhège língjìan bù hégé, gōngchā tài dà le.", vi:"Linh kiện này không đạt, dung sai lớn quá.", en:"This part is unqualified, the tolerance is too large."},
+  {s:'factory', hanzi:"请检查一下螺丝有没有拧紧。", pinyin:"Qǐng jiǎnchá yīxià luósī yǒu méiyǒu nǐng jǐn.", vi:"Vui lòng kiểm tra xem ốc đã vặn chặt chưa.", en:"Please check if the screws are tightened."},
+  {s:'factory', hanzi:"用游标卡尺重新测量一下这个尺寸。", pinyin:"Yòng yóubiāo kǎchǐ chóngxīn cèliáng yīxià zhège chǐcùn.", vi:"Dùng thước cặp đo lại kích thước này đi.", en:"Use calipers to remeasure this dimension."},
+  {s:'factory', hanzi:"这批货有一些产品外观有划伤。", pinyin:"Zhè pī huò yǒu yīxiē chǎnpǐn wàiguān yǒu huáshāng.", vi:"Lô hàng này có một vài sản phẩm bị xước ngoại quan.", en:"There are some products with cosmetic scratches in this batch."},
+  {s:'factory', hanzi:"表面处理的颜色不对，需要返工。", pinyin:"Biǎomiàn chǔlǐ de yánsè bù duì, xūyào fǎngōng.", vi:"Màu sắc xử lý bề mặt không đúng, cần làm lại.", en:"The surface treatment color is wrong, needs rework."},
+  {s:'factory', hanzi:"质检报告什么时候能出来？", pinyin:"Zhìjiǎn bàogào shénme shíhou néng chūlái?", vi:"Báo cáo QC bao giờ mới có?", en:"When will the QC report be ready?"},
+  {s:'factory', hanzi:"抽检发现了三个次品。", pinyin:"Chōujiǎn fāxiàn le sān gè cìpǐn.", vi:"Kiểm tra xác suất phát hiện 3 hàng thứ phẩm.", en:"Spot check found three defective products."},
+
+  // 4. An toàn & Thiết bị
+  {s:'factory', hanzi:"进入车间必须戴安全帽和护目镜。", pinyin:"Jìnrù chējiān bìxū dài ānquánmào hé hùmùjìng.", vi:"Vào xưởng bắt buộc phải đội mũ và đeo kính bảo hộ.", en:"Must wear a safety helmet and goggles when entering the workshop."},
+  {s:'factory', hanzi:"机器漏电了，马上切断电源！", pinyin:"Jīqì lòudiàn le, mǎshàng qiēduàn diànyuán!", vi:"Máy bị rò điện rồi, ngắt nguồn điện ngay lập tức!", en:"The machine is leaking electricity, cut off the power immediately!"},
+  {s:'factory', hanzi:"这台冲压机的模具需要更换。", pinyin:"Zhè tái chōngyājī de mójù xūyào gēnghuàn.", vi:"Khuôn của máy dập này cần được thay thế.", en:"The mold of this stamping machine needs to be replaced."},
+  {s:'factory', hanzi:"电机温度太高，让它停一会。", pinyin:"Diànjī wēndù tài gāo, ràng tā tíng yī huì.", vi:"Nhiệt độ động cơ cao quá, cho nó dừng một lát.", en:"The motor temperature is too high, let it stop for a while."},
+  {s:'factory', hanzi:"不要用手直接接触化学品。", pinyin:"Bùyào yòng shǒu zhíjiē jiēchù huàxué pǐn.", vi:"Không dùng tay tiếp xúc trực tiếp với hóa chất.", en:"Do not touch chemicals directly with your hands."},
+  {s:'factory', hanzi:"叉车正在作业，请注意安全。", pinyin:"Chāchē zhèngzài zuòyè, qǐng zhùyì ānquán.", vi:"Xe nâng đang làm việc, vui lòng chú ý an toàn.", en:"Forklift is operating, please pay attention to safety."},
+  {s:'factory', hanzi:"治具卡住了，拿扳手过来调整。", pinyin:"Zhìjù kǎ zhù le, ná bānshǒu guòlái tiáozhěng.", vi:"Đồ gá bị kẹt rồi, lấy cờ lê qua đây chỉnh lại.", en:"The jig is stuck, bring a wrench to adjust it."},
+
+  // ==========================================
+  // 💬 MẢNG GIAO TIẾP HÀNG NGÀY (DAILY)
+  // ==========================================
+  // 1. Chào hỏi & Xã giao
+  {s:'daily', hanzi:"你好，请问几点开始上班？", pinyin:"Nǐ hǎo, qǐngwèn jǐ diǎn kāishǐ shàngbān?", vi:"Xin chào, mấy giờ bắt đầu làm việc?", en:"Hi, what time do we start work?"},
+  {s:'daily', hanzi:"你今天看起来精神不错！", pinyin:"Nǐ jīntiān kàn qǐlái jīngshén búcuò!", vi:"Hôm nay trông bạn rất tươi tắn!", en:"You look energetic today!"},
+  {s:'daily', hanzi:"麻烦你再说一遍，我没听懂。", pinyin:"Máfan nǐ zài shuō yí biàn, wǒ méi tīng dǒng.", vi:"Phiền bạn nói lại lần nữa, tôi nghe không hiểu.", en:"Please say it again, I didn't understand."},
+  {s:'daily', hanzi:"周末你有什么打算？", pinyin:"Zhōumò nǐ yǒu shénme dǎsuàn?", vi:"Cuối tuần bạn có dự định gì không?", en:"What are your plans for the weekend?"},
+  {s:'daily', hanzi:"辛苦了，早点回家休息吧。", pinyin:"Xīnkǔ le, zǎo diǎn huíjiā xiūxi ba.", vi:"Vất vả rồi, về nhà sớm nghỉ ngơi đi.", en:"Thanks for your hard work, go home early and rest."},
+  {s:'daily', hanzi:"好久不见，最近忙什么呢？", pinyin:"Hǎojiǔ bùjiàn, zuìjìn máng shénme ne?", vi:"Lâu rồi không gặp, dạo này bận gì thế?", en:"Long time no see, what have you been busy with lately?"},
+  
+  // 2. Công sở & Văn phòng
+  {s:'daily', hanzi:"请通过微信把文件发给我。", pinyin:"Qǐng tōngguò wēixìn bǎ wénjiàn fā gěi wǒ.", vi:"Vui lòng gửi tài liệu cho tôi qua WeChat.", en:"Please send me the document via WeChat."},
+  {s:'daily', hanzi:"今天下午三点我们和研发部开会。", pinyin:"Jīntiān xiàwǔ sān diǎn wǒmen hé yánfā bù kāihuì.", vi:"3 giờ chiều nay chúng ta họp với bộ phận R&D.", en:"We have a meeting with the R&D department at 3 PM today."},
+  {s:'daily', hanzi:"主管，这份报告我已经整理好了。", pinyin:"Zhǔguǎn, zhè fèn bàogào wǒ yǐjīng zhěnglǐ hǎo le.", vi:"Sếp, báo cáo này tôi đã sắp xếp xong rồi.", en:"Supervisor, I have sorted out this report."},
+  {s:'daily', hanzi:"我的电脑死机了，能叫IT来看看吗？", pinyin:"Wǒ de diànnǎo sǐjī le, néng jiào IT lái kànkan ma?", vi:"Máy tính của tôi bị treo rồi, có thể gọi IT đến xem giúp không?", en:"My computer crashed, can you call IT to take a look?"},
+  {s:'daily', hanzi:"我今天发烧了，想请假一天。", pinyin:"Wǒ jīntiān fāshāo le, xiǎng qǐngjià yītiān.", vi:"Hôm nay tôi bị sốt, muốn xin nghỉ phép một ngày.", en:"I have a fever today and would like to ask for a day off."},
+  {s:'daily', hanzi:"会议取消了，改到明天上午。", pinyin:"Huìyì qǔxiāo le, gǎi dào míngtiān shàngwǔ.", vi:"Cuộc họp bị hủy rồi, chuyển sang sáng mai.", en:"The meeting is canceled and rescheduled for tomorrow morning."},
+  {s:'daily', hanzi:"老板让你去他办公室一趟。", pinyin:"Lǎobǎn ràng nǐ qù tā bàngōngshì yī tàng.", vi:"Sếp bảo bạn qua văn phòng ông ấy một lát.", en:"The boss wants you to go to his office."},
+
+  // 3. Ăn uống & Mua sắm
+  {s:'daily', hanzi:"中午吃什么？要点外卖吗？", pinyin:"Zhōngwǔ chī shénme? Yào diǎn wàimài ma?", vi:"Trưa nay ăn gì? Có gọi đồ ăn ngoài không?", en:"What's for lunch? Do you want to order takeout?"},
+  {s:'daily', hanzi:"下班后一起去喝杯啤酒吧！", pinyin:"Xiàbān hòu yīqǐ qù hē bēi píjiǔ ba!", vi:"Tan làm cùng đi uống bia nhé!", en:"Let's go grab a beer after work!"},
+  {s:'daily', hanzi:"这家餐厅的海鲜非常新鲜。", pinyin:"Zhè jiā cāntīng de hǎixiān fēicháng xīnxiān.", vi:"Hải sản của nhà hàng này rất tươi.", en:"The seafood at this restaurant is very fresh."},
+  {s:'daily', hanzi:"太贵了，能不能便宜一点？", pinyin:"Tài guì le, néng bùnéng piányi yīdiǎn?", vi:"Đắt quá, có thể rẻ hơn một chút không?", en:"Too expensive, can it be a bit cheaper?"},
+  {s:'daily', hanzi:"我可以用支付宝付款吗？", pinyin:"Wǒ kěyǐ yòng zhīfùbǎo fùkuǎn ma?", vi:"Tôi có thể thanh toán bằng Alipay không?", en:"Can I pay with Alipay?"},
+  {s:'daily', hanzi:"请给我拿一双筷子和几张餐巾纸。", pinyin:"Qǐng gěi wǒ ná yī shuāng kuàizi hé jǐ zhāng cānjīnzhǐ.", vi:"Vui lòng lấy cho tôi một đôi đũa và vài tờ giấy ăn.", en:"Please get me a pair of chopsticks and some napkins."},
+  {s:'daily', hanzi:"这道菜有点辣，我不习惯。", pinyin:"Zhè dào cài yǒudiǎn là, wǒ bù xíguàn.", vi:"Món này hơi cay, tôi không quen.", en:"This dish is a bit spicy, I'm not used to it."},
+
+  // 4. Di chuyển & Sinh hoạt
+  {s:'daily', float:"left", hanzi:"今天堵车很严重，我可能会迟到。", pinyin:"Jīntiān dǔchē hěn yánzhòng, wǒ kěnéng huì chídào.", vi:"Hôm nay tắc đường rất nghiêm trọng, tôi có thể đến muộn.", en:"Traffic is very bad today, I might be late."},
+  {s:'daily', hanzi:"请问去火车站怎么走？", pinyin:"Qǐngwèn qù huǒchēzhàn zěnme zǒu?", vi:"Xin hỏi đường đến ga tàu hỏa đi thế nào?", en:"Excuse me, how do I get to the train station?"},
+  {s:'daily', hanzi:"我的手机没电了，借我个充电器。", pinyin:"Wǒ de shǒujī méi diàn le, jiè wǒ gè chōngdiànqì.", vi:"Điện thoại tôi hết pin rồi, cho mượn cái sạc với.", en:"My phone is dead, lend me a charger."},
+  {s:'daily', hanzi:"今晚有足球比赛，你要一起看吗？", pinyin:"Jīnwǎn yǒu zúqiú bǐsài, nǐ yào yīqǐ kàn ma?", vi:"Tối nay có trận bóng đá, bạn muốn xem cùng không?", en:"There is a football match tonight, do you want to watch it together?"},
+  {s:'daily', hanzi:"天气预报说下午有阵雨，记得带伞。", pinyin:"Tiānqì yùbào shuō xiàwǔ yǒu zhènyǔ, jìde dài sǎn.", vi:"Dự báo thời tiết nói chiều nay có mưa rào, nhớ mang ô.", en:"The weather forecast says there will be showers in the afternoon, remember to bring an umbrella."},
+  {s:'daily', hanzi:"我的无线耳机找不到了。", pinyin:"Wǒ de wúxiàn ěrjī zhǎo bù dào le.", vi:"Tôi không tìm thấy tai nghe không dây của mình đâu.", en:"I can't find my wireless earphones."},
+  {s:'daily', hanzi:"你平时喜欢听什么音乐？", pinyin:"Nǐ píngshí xǐhuan tīng shénme yīnyuè?", vi:"Bình thường bạn thích nghe nhạc gì?", en:"What kind of music do you usually like to listen to?"},
+// === 5. Thiết kế Cơ khí, CAD & Nhiệt học ===
+  {s:'factory', hanzi:"请帮我把这个零件的边缘倒角。", pinyin:"Qǐng bāng wǒ bǎ zhège língjiàn de biānyuán dǎojiǎo.", vi:"Hãy giúp tôi vát mép cạnh của linh kiện này.", en:"Please help me chamfer the edge of this part."},
+  {s:'factory', hanzi:"这根热管的导热性能非常好。", pinyin:"Zhè gēn règuǎn de dǎorè xìngnéng fēicháng hǎo.", vi:"Hiệu suất dẫn nhiệt của ống đồng này rất tốt.", en:"The thermal conductivity of this heat pipe is very good."},
+  {s:'factory', hanzi:"散热器的热阻有点大，影响了均温板的性能。", pinyin:"Sànrèqì de rèzǔ yǒudiǎn dà, yǐngxiǎng le jūnwēnbǎn de xìngnéng.", vi:"Nhiệt trở của tản nhiệt hơi lớn, ảnh hưởng đến hiệu năng của buồng hơi.", en:"The thermal resistance of the heatsink is a bit high, affecting the vapor chamber's performance."},
+  {s:'factory', hanzi:"由于干涉问题，这个三维模型无法进行装配。", pinyin:"Yóuyú gānshè wèntí, zhège sānwéi móxíng wúfǎ jìnxíng zhuāngpèi.", vi:"Do vấn đề giao cắt (cấn), mô hình 3D này không thể lắp ráp được.", en:"Due to interference issues, this 3D model cannot be assembled."},
+  {s:'factory', hanzi:"外壳的表面需要做阳极氧化处理。", pinyin:"Wàiké de biǎomiàn xūyào zuò yángjí yánghuà chǔlǐ.", vi:"Bề mặt của lớp vỏ cần được xử lý Anode hóa.", en:"The surface of the casing needs anodizing treatment."},
+
+  // === 6. Hệ thống Điện tử & Nhúng (Embedded) ===
+  {s:'factory', hanzi:"拿万用表过来测一下主板的电压。", pinyin:"Ná wànyòngbiǎo guòlái cè yīxià zhǔbǎn de diànyā.", vi:"Lấy đồng hồ vạn năng qua đây đo điện áp của bo mạch chủ xem.", en:"Bring the multimeter over to test the motherboard's voltage."},
+  {s:'factory', float:"left", hanzi:"步进电机不转了，可能是驱动程序有问题。", pinyin:"Bùjìn diànjī bù zhuǎn le, kěnéng shì qūdòng chéngxù yǒu wèntí.", vi:"Động cơ bước không quay nữa, có thể trình điều khiển (driver) có lỗi.", en:"The stepper motor stopped spinning, there might be an issue with the driver."},
+  {s:'factory', hanzi:"芯片的引脚断了，得重新焊接。", pinyin:"Xīnpiàn de yǐnjiǎo duàn le, děi chóngxīn hànjiē.", vi:"Chân cắm của con chip bị gãy rồi, phải hàn lại thôi.", en:"The chip's pin is broken, it needs to be resoldered."},
+  {s:'factory', hanzi:"请确认一下这个传感器的通讯协议和波特率。", pinyin:"Qǐng quèrèn yīxià zhège chuángǎnqì de tōngxùn xiéyì hé bōtèlǜ.", vi:"Vui lòng xác nhận lại giao thức giao tiếp và tốc độ baud của cảm biến này.", en:"Please confirm the communication protocol and baud rate of this sensor."},
+
+  // === 7. Công việc & Báo cáo Văn phòng ===
+  {s:'daily', hanzi:"老板要我们在下午开会前准备好简报。", pinyin:"Lǎobǎn yào wǒmen zài xiàwǔ kāihuì qián zhǔnbèi hǎo jiǎnbào.", vi:"Sếp yêu cầu chúng ta chuẩn bị xong bài thuyết trình trước buổi họp chiều nay.", en:"The boss wants us to have the presentation ready before the afternoon meeting."},
+  {s:'daily', hanzi:"如果没有意外，新项目下个月就会开始研发。", pinyin:"Rúguǒ méiyǒu yìwài, xīn xiàngmù xià gè yuè jiù huì kāishǐ yánfā.", vi:"Nếu không có gì bất ngờ, dự án mới tháng sau sẽ bắt đầu R&D.", en:"If there are no surprises, the new project will start R&D next month."},
+  {s:'daily', hanzi:"不用担心，这个问题我会负责解决的。", pinyin:"Bùyòng dānxīn, zhège wèntí wǒ huì fùzé jiějué de.", vi:"Không cần lo lắng, tôi sẽ chịu trách nhiệm giải quyết vấn đề này.", en:"Don't worry, I will take responsibility for solving this problem."},
+  {s:'daily', hanzi:"副工程师的面试定在星期一上午十点。", pinyin:"Fù gōngchéngshī de miànshì dìng zài xīngqīyī shàngwǔ shí diǎn.", vi:"Lịch phỏng vấn Phó kỹ sư được chốt vào 10 giờ sáng Thứ Hai.", en:"The Vice Engineer interview is scheduled for 10 AM on Monday."},
+
+  // === 8. Mua sắm & Tài chính ===
+  {s:'daily', hanzi:"虽然这件外套很漂亮，但是价格太贵了。", pinyin:"Suīrán zhè jiàn wàitào hěn piàoliang, dànshì jiàgé tài guì le.", vi:"Mặc dù chiếc áo khoác này rất đẹp, nhưng giá đắt quá.", en:"Although this jacket is beautiful, the price is too expensive."},
+  {s:'daily', hanzi:"请问用信用卡付款可以打折吗？", pinyin:"Qǐngwèn yòng xìnyòngkǎ fùkuǎn kěyǐ dǎzhé ma?", vi:"Xin hỏi thanh toán bằng thẻ tín dụng có được giảm giá không?", en:"Excuse me, is there a discount if I pay with a credit card?"},
+  {s:'daily', hanzi:"买单！麻烦你给我一张收据。", pinyin:"Mǎidān! Máfan nǐ gěi wǒ yī zhāng shōujù.", vi:"Tính tiền! Phiền bạn cho tôi xin một tờ hóa đơn.", en:"Bill, please! Please give me a receipt."},
+  {s:'daily', hanzi:"这双鞋子尺码不合适，我想退款。", pinyin:"Zhè shuāng xiézi chǐmǎ bù héshì, wǒ xiǎng tuìkuǎn.", vi:"Đôi giày này nhầm size rồi, tôi muốn hoàn tiền.", en:"The size of these shoes is not right, I want a refund."},
+
+  // === 9. Sức khỏe, Thể thao & Cảm xúc ===
+  {s:'daily', hanzi:"我最近经常头疼，可能是工作压力太大了。", pinyin:"Wǒ zuìjìn jīngcháng tóuténg, kěnéng shì gōngzuò yālì tài dà le.", vi:"Dạo này tôi hay đau đầu, có lẽ là do áp lực công việc lớn quá.", en:"I often have headaches lately, maybe the work pressure is too high."},
+  {s:'daily', hanzi:"医生说你需要多休息，按时吃药。", pinyin:"Yīshēng shuō nǐ xūyào duō xiūxi, ànshí chī yào.", vi:"Bác sĩ nói bạn cần nghỉ ngơi nhiều hơn, uống thuốc đúng giờ.", en:"The doctor said you need to rest more and take medicine on time."},
+  {s:'daily', hanzi:"因为下大雨，所以我们决定不去爬山了。", pinyin:"Yīnwèi xià dàyǔ, suǒyǐ wǒmen juédìng bù qù páshān le.", vi:"Bởi vì trời mưa to, nên chúng tôi quyết định không đi leo núi nữa.", en:"Because of the heavy rain, we decided not to go mountain climbing."},
+  {s:'daily', hanzi:"他通过了考试，看起来非常兴奋。", pinyin:"Tā tōngguò le kǎoshì, kàn qǐlái fēicháng xīngfèn.", vi:"Cậu ấy vượt qua kỳ thi rồi, trông vô cùng hào hứng.", en:"He passed the exam and looks very excited."},
+  {s:'daily', hanzi:"别生气了，我对你道歉好吗？", pinyin:"Bié shēngqì le, wǒ duì nǐ dàoqiàn hǎo ma?", vi:"Đừng tức giận nữa, tôi xin lỗi bạn được không?", en:"Don't be angry, can I apologize to you?"},
+
+  // === 10. Đời sống, Giải trí & Giao thông ===
+  {s:'daily', hanzi:"你能借我这本关于设计的书吗？", pinyin:"Nǐ néng jiè wǒ zhè běn guānyú shèjì de shū ma?", vi:"Bạn có thể cho tôi mượn cuốn sách về thiết kế này được không?", en:"Can you lend me this book about design?"},
+  {s:'daily', hanzi:"一直往前走，到了十字路口往左转就是地铁站。", pinyin:"Yīzhí wǎng qián zǒu, dào le shízì lùkǒu wǎng zuǒ zhuǎn jiùshì dìtiě zhàn.", vi:"Cứ đi thẳng, đến ngã tư rẽ trái là trạm tàu điện ngầm.", en:"Keep going straight, turn left at the intersection and you'll find the subway station."},
+  {s:'daily', hanzi:"你比较喜欢吃海鲜还是烤肉？", pinyin:"Nǐ bǐjiào xǐhuan chī hǎixiān háishì kǎoròu?", vi:"Bạn thích ăn hải sản hay thịt nướng hơn?", en:"Do you prefer eating seafood or BBQ?"},
+  {s:'daily', hanzi:"每天学习新的词语和语法对提高中文很有帮助。", pinyin:"Měitiān xuéxí xīn de cíyǔ hé yǔfǎ duì tígāo zhōngwén hěn yǒu bāngzhù.", vi:"Mỗi ngày học từ vựng và ngữ pháp mới rất có ích cho việc nâng cao tiếng Trung.", en:"Learning new vocabulary and grammar every day is very helpful for improving Chinese."},
+  {s:'daily', hanzi:"我刚才把手机忘在洗手间里了！", pinyin:"Wǒ gāngcái bǎ shǒujī wàng zài xǐshǒujiān lǐ le!", vi:"Lúc nãy tôi quên khuấy mất điện thoại trong nhà vệ sinh rồi!", en:"I just forgot my phone in the restroom!"},
+  {s:'daily', hanzi:"这部科幻电影周末首映，一起去电影院看吧。", pinyin:"Zhè bù kēhuàn diànyǐng zhōumò shǒuyìng, yīqǐ qù diànyǐngyuàn kàn ba.", vi:"Bộ phim khoa học viễn tưởng này cuối tuần công chiếu, cùng đi rạp xem nhé.", en:"This sci-fi movie premieres this weekend, let's go to the cinema together."}
+];
+
+
+let learnMode = 'vocab';
+let currentSection = 'all';
+let dailyGoal = 15;
+let score = 0;
+let total = 0;
+let streak = 0;
+let wordProgress = {};
+let current = null;
+let blockSize = 15;
+// Lưu trữ khối hiện tại của từng chủ đề
+let blockProgress = JSON.parse(localStorage.getItem('hgf_v4_blocks') || '{}');
+
+function getCurrentBlock() { 
+  const key = `${learnMode}_${currentSection}`;
+  return blockProgress[key] || 0; 
+}
+function setCurrentBlock(idx) { 
+  const key = `${learnMode}_${currentSection}`;
+  blockProgress[key] = idx; 
+  localStorage.setItem('hgf_v4_blocks', JSON.stringify(blockProgress)); 
+}
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function saveProgress() { localStorage.setItem('hgf_v4_progress', JSON.stringify(wordProgress)); }
+function saveStats() { localStorage.setItem('hgf_v4_stats', JSON.stringify({score, total, streak, dailyGoal})); }
+
+function getProgress(item) {
+  const id = item.hanzi;
+  if (!wordProgress[id]) wordProgress[id] = { level: 0, due: 0, firstSeen: null };
+  return wordProgress[id];
+}
+
+function countTodayNew() {
+  const t = todayStr();
+  return Object.values(wordProgress).filter(p => p.firstSeen === t).length;
+}
+
+function recordAnswer(item, correct) {
+  const p = getProgress(item);
+  if (!p.firstSeen) p.firstSeen = todayStr();
+  
+  if (correct) {
+    p.level = Math.min(6, p.level + 1);
+    p.isMistake = false; // Trả lời đúng -> Xóa án phạt
+  } else {
+    p.level = Math.max(0, p.level - 2);
+    p.isMistake = true;  // Trả lời sai -> Cho vào sổ đen
+  }
+  
+  const today = todayStr();
+  if (p.firstSeen === today && p.level < 1) {
+    p.due = Date.now() + 24 * 3600 * 1000;
+  } else {
+    p.due = Date.now() + (SRS_INTERVALS_MS[p.level] || SRS_INTERVALS_MS[SRS_INTERVALS_MS.length-1]);
+  }
+  saveProgress();
+  updateGoalCard();
+}
+function pickVocabWord(pool) {
+  if (currentSection === 'mistakes') {
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  const currentBlockIndex = getCurrentBlock();
+  const startIndex = currentBlockIndex * blockSize;
+  const endIndex = startIndex + blockSize;
+  const currentBlockWords = pool.slice(startIndex, endIndex);
+
+  // Trường hợp đã học hết sạch các khối trong chủ đề này
+  if (currentBlockWords.length === 0) {
+    document.getElementById('feedback').textContent = '🎉 Bạn đã học hết tất cả các khối trong chủ đề này!';
+    document.getElementById('feedback').className = 'feedback ok';
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // Lọc ra các từ trong Khối CHƯA đạt Level 6 (Chưa thuộc hoàn toàn)
+  const unmasteredWords = currentBlockWords.filter(v => {
+    const p = wordProgress[v.hanzi];
+    return !p || p.level < 6;
+  });
+
+  // TÍNH NĂNG TỰ NEXT KHỐI: Nếu đã thuộc hết (Level 6) toàn bộ từ trong khối này
+if (unmasteredWords.length === 0) {
+    const totalBlocks = Math.ceil(pool.length / blockSize);
+    if (currentBlockIndex + 1 < totalBlocks) {
+      alert(`🎉 Chúc mừng! Bạn đã chinh phục hoàn toàn Khối ${currentBlockIndex + 1} (Điểm 6/6).\nHệ thống sẽ tự động chuyển sang Khối ${currentBlockIndex + 2}!`);
+      setCurrentBlock(currentBlockIndex + 1);
+      renderBlockSelector();
+      return pickVocabWord(pool); // Gọi lại để lấy từ của khối mới
+    } else {
+      // Đã học xong khối cuối cùng của chủ đề
+      document.getElementById('feedback').textContent = '🏆 XUẤT SẮC! Bạn đã master toàn bộ chủ đề này!';
+      document.getElementById('feedback').className = 'feedback ok';
+      // Random lại toàn bộ pool để luyện phản xạ
+      return pool[Math.floor(Math.random() * pool.length)]; 
+    }
+  }
+
+  // Chọn từ để học: Ưu tiên nhả các từ có Level thấp nhất trong Khối ra hỏi trước
+  unmasteredWords.sort((a, b) => {
+    const levelA = wordProgress[a.hanzi]?.level || 0;
+    const levelB = wordProgress[b.hanzi]?.level || 0;
+    return levelA - levelB;
+  });
+  
+  const lowestLevel = wordProgress[unmasteredWords[0].hanzi]?.level || 0;
+  const candidates = unmasteredWords.filter(v => (wordProgress[v.hanzi]?.level || 0) === lowestLevel);
+
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+function currentPool() {
+  const data = learnMode === 'sentence' ? sentences : vocab;
+  
+  if (currentSection === 'all') return data;
+  
+  // Nếu đang ở mục Hay sai
+  if (currentSection === 'mistakes') {
+    const mistakesPool = data.filter(v => wordProgress[v.hanzi]?.isMistake);
+    
+    // Nếu không có từ nào sai, báo tin vui và lấy tạm data tổng
+    if (mistakesPool.length === 0) {
+      document.getElementById('feedback').textContent = '🎉 Tuyệt vời! Bạn không nợ từ sai nào.';
+      document.getElementById('feedback').className = 'feedback ok';
+      return data;
+    }
+    return mistakesPool;
+  }
+  
+  return data.filter(x => x.s === currentSection);
+}
+function isNewWord(item) {
+  const p = wordProgress[item.hanzi];
+  return p && p.firstSeen === todayStr() && p.level < 1;
+}
+
+function updateVocabCount() {
+  document.getElementById('total-vocab').textContent = vocab.length;
+}
+
+function init() {
+  const savedCustom = JSON.parse(localStorage.getItem('hgf_v4_custom_vocab') || '[]');
+  if (savedCustom.length > 0) {
+    vocab = [...vocab, ...savedCustom];
+  }
+  
+  // Tải cài đặt Khối
+  const savedBlockSize = localStorage.getItem('hgf_v4_blockSize');
+  if (savedBlockSize) blockSize = parseInt(savedBlockSize);
+
+  buildSectionTabs();
+  updateStats();
+  renderBlockSelector(); // <-- Nạp danh sách khối
+  updateGoalCard();
+  updateVocabCount();
+  nextQuestion();
+}
+function buildSectionTabs() {
+  const cont = document.getElementById('section-tabs');
+  cont.innerHTML = sections.map(sec => 
+    `<button class="section-tab${sec.id === currentSection ? ' active' : ''}" onclick="setSection('${sec.id}')">${sec.label}</button>`
+  ).join('');
+}
+
+function setSection(id) {
+  currentSection = id;
+  document.querySelectorAll('.section-tab').forEach((b, i) => b.classList.toggle('active', sections[i].id === id));
+  renderBlockSelector(); 
+  updateGoalCard();
+  nextQuestion();
+}
+
+function renderBlockSelector() {
+  const baseData = learnMode === 'sentence' ? sentences : vocab;
+  const pool = currentSection === 'all' ? baseData : baseData.filter(v => v.s === currentSection);
+  const totalBlocks = Math.ceil(pool.length / blockSize);
+  const select = document.getElementById('block-selector');
+  const currentBlockIndex = getCurrentBlock();
+  
+  if(!select) return;
+  let html = '';
+  for(let i=0; i<totalBlocks; i++) {
+    const startNum = i * blockSize + 1;
+    const endNum = Math.min((i + 1) * blockSize, pool.length);
+    html += `<option value="${i}" ${i === currentBlockIndex ? 'selected' : ''}>Khối ${i + 1} (Từ ${startNum} đến ${endNum})</option>`;
+  }
+  select.innerHTML = html;
+}
+function changeBlock(index) {
+  setCurrentBlock(parseInt(index));
+  updateGoalCard();
+  nextQuestion();
+}
+
+function setBlockSize(n) {
+  blockSize = n;
+  localStorage.setItem('hgf_v4_blockSize', blockSize);
+  renderBlockSelector();
+  updateGoalCard();
+  nextQuestion();
+  alert(`Đã cài đặt mỗi khối chứa ${n} từ.`);
+}
+
+function updateGoalCard() {
+  if (currentSection === 'mistakes') {
+    document.getElementById('goal-progress').innerHTML = `Đang ôn tập lại các thẻ hay làm sai.`;
+    document.getElementById('goal-bar').style.width = '100%';
+    return;
+  }
+
+  const baseData = learnMode === 'sentence' ? sentences : vocab;
+  const pool = currentSection === 'all' ? baseData : baseData.filter(v => v.s === currentSection);
+  const totalBlocks = Math.ceil(pool.length / blockSize);
+  const currentBlockIndex = getCurrentBlock();
+  
+  const startIndex = currentBlockIndex * blockSize;
+  const endIndex = startIndex + blockSize;
+  const currentBlockWords = pool.slice(startIndex, endIndex);
+  
+  // Đếm số từ/câu đã đạt level 6 trong khối hiện tại
+  const masteredCount = currentBlockWords.filter(v => {
+    const p = wordProgress[v.hanzi];
+    return p && p.level >= 6;
+  }).length;
+  
+  const totalInBlock = currentBlockWords.length;
+  const pct = totalInBlock === 0 ? 100 : Math.round((masteredCount / totalInBlock) * 100);
+  
+  document.getElementById('goal-bar').style.width = pct + '%';
+  document.getElementById('goal-progress').innerHTML = `Đang học <b>Khối ${currentBlockIndex + 1}</b> / ${totalBlocks} <br> Độ thông thạo khối: <b>${masteredCount}</b>/${totalInBlock} (Đạt Level 6/6)`;
+}
+function updateStats() {
+  saveStats();
+  document.getElementById('score').textContent = score;
+  document.getElementById('total').textContent = total;
+  
+  if (streak >= 3) {
+    document.getElementById('streak').style.display = 'flex';
+    document.getElementById('streak-val').textContent = streak;
+  } else {
+    document.getElementById('streak').style.display = 'none';
+  }
+  
+  const pct = total ? Math.round(score / total * 100) : 0;
+  document.getElementById('acc').textContent = total ? `${pct}%` : '—';
+}
+
+function nextQuestion() {
+  document.getElementById('btn-next').style.display = 'none';
+  const pool = currentPool();
+  if (!pool.length) {
+    document.getElementById('hanzi').textContent = '?';
+    return;
+  }
+  
+  // Áp dụng thuật toán Khối (Block) cho TẤT CẢ (Từ vựng lẫn Câu mẫu)
+  current = pickVocabWord(pool); 
+  
+  const isNew = isNewWord(current);
+  const tagText = isNew ? '🆕 MỚI' : '📖 ÔN TẬP';
+  document.getElementById('tag').textContent = tagText;
+  document.getElementById('tag').className = isNew ? 'tag new' : 'tag review';
+  
+  document.getElementById('hanzi').textContent = current.hanzi;
+  document.getElementById('pinyin-display').textContent = current.pinyin;
+  document.getElementById('reveal').textContent = '';
+  document.getElementById('reveal').classList.remove('show');
+  document.getElementById('feedback').textContent = 'Chọn đáp án đúng';
+  document.getElementById('feedback').className = 'feedback';
+  
+  buildOptions(pool);
+  speak(current.hanzi);
+  updateGoalCard();
+}
+
+function buildOptions(pool) {
+  // 1. Lọc ra các từ CÙNG CHỦ ĐỀ để làm đáp án nhiễu (khó đoán hơn)
+  let distractors = pool.filter(v => v.hanzi !== current.hanzi && v.s === current.s);
+  
+  // (Dự phòng) Nếu chủ đề này có quá ít từ (< 3 từ), thì lấy đại từ trong toàn bộ pool
+  if (distractors.length < 3) {
+    distractors = pool.filter(v => v.hanzi !== current.hanzi);
+  }
+  
+  // 2. TRỘN ngẫu nhiên danh sách nhiễu trước, sau đó mới bốc 3 từ
+  distractors = shuffle(distractors);
+  const wrongOptions = distractors.slice(0, 3);
+  
+  // 3. Gộp đáp án đúng và 3 đáp án sai, rồi trộn ngẫu nhiên vị trí lần cuối
+  const finalOptions = shuffle([current, ...wrongOptions]);
+  
+  // 4. Render ra HTML
+  const grid = document.getElementById('options');
+  grid.innerHTML = finalOptions.map(opt => `
+    <button class="option" onclick="checkAnswer(this, '${opt.hanzi.replace(/'/g, "\\'")}')">
+      <span class="option-main">${opt.vi}</span>
+      <span class="option-sub">${opt.en}</span>
+    </button>
+  `).join('');
+}
+let lastQuestionInfo = null; // Biến nhớ câu trước
+
+function checkAnswer(btn, hanzi) {
+  const isCorrect = hanzi === current.hanzi;
+  const allBtns = document.querySelectorAll('.option');
+  allBtns.forEach(b => b.disabled = true);
+  
+  const fb = document.getElementById('feedback');
+  const reveal = document.getElementById('reveal');
+  
+  total++;
+  
+  // 1. TẠO HTML GIẢI NGHĨA
+  let revealHTML = `
+    <div style="font-size:16px; color:var(--text-strong); margin-bottom:4px;">
+      ${current.hanzi} <span style="font-size:14px; color:var(--text2); font-family:'JetBrains Mono',monospace;">${current.pinyin}</span>
+    </div>
+    <div>${current.vi} — ${current.en}</div>
+  `;
+  
+  // 2. TÌM VÀ GHÉP CÂU VÍ DỤ
+  if (learnMode === 'vocab') {
+    const example = sentences.find(s => s.hanzi.includes(current.hanzi));
+    if (example) {
+      const highlightedHanzi = example.hanzi.replace(current.hanzi, `<span style="color:var(--accent); font-weight:700;">${current.hanzi}</span>`);
+      revealHTML += `
+        <div style="margin-top: 12px; padding: 10px; background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; text-align: left; font-family: 'Inter', sans-serif;">
+          <div style="color: var(--text-strong); font-size: 14px; margin-bottom: 4px;">${highlightedHanzi}</div>
+          <div style="font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px;">${example.pinyin}</div>
+          <div style="font-size: 12px; color: var(--accent);">${example.vi}</div>
+        </div>
+      `;
+    }
+  }
+  
+  reveal.innerHTML = revealHTML;
+  reveal.classList.add('show');
+  
+  // LƯU LẠI GIẢI NGHĨA ĐỂ CHO VÀO NÚT "CÂU TRƯỚC"
+  lastQuestionInfo = revealHTML;
+
+ if (isCorrect) {
+    btn.classList.add('correct');
+    score++;
+    streak++;
+    recordAnswer(current, true); // Lưu điểm tự động
+    fb.textContent = '✓ Chính xác!';
+    fb.className = 'feedback ok';
+  } else {
+    btn.classList.add('wrong');
+    streak = 0;
+    recordAnswer(current, false); // Trừ điểm tự động
+    
+    allBtns.forEach(b => {
+      if (b.textContent.includes(current.vi)) b.classList.add('correct');
+    });
+    fb.textContent = '✗ Sai — đáp án đúng ở dưới';
+    fb.className = 'feedback fail';
+  }
+  
+  updateStats();
+  
+  // DỪNG TỰ ĐỘNG NHẢY - BẬT NÚT TIẾP TỤC LÊN
+  document.getElementById('btn-next').style.display = 'block';
+}
+function switchMode(mode) {
+  learnMode = mode;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === ['vocab','sentence'].indexOf(mode)));
+  renderBlockSelector(); // Nạp lại Khối của Câu mẫu
+  updateGoalCard();      // Nạp lại Tiến độ
+  nextQuestion();
+}
+function speak(txt) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang = 'zh-CN';
+  u.rate = 0.85;
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v => v.lang === 'zh-CN') || voices.find(v => v.lang.startsWith('zh'));
+  if (voice) u.voice = voice;
+  window.speechSynthesis.speak(u);
+}
+
+function replay() {
+  if (current) speak(current.hanzi);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function openAddVocabModal() { document.getElementById('add-vocab-modal').classList.add('open'); }
+function closeAddVocabModal() { 
+  document.getElementById('add-vocab-modal').classList.remove('open');
+  document.querySelectorAll('.form-input').forEach(x => x.value = '');
+}
+
+function addVocab() {
+  const hanzi = document.getElementById('add-hanzi').value.trim();
+  const pinyin = document.getElementById('add-pinyin').value.trim();
+  const vi = document.getElementById('add-vi').value.trim();
+  const en = document.getElementById('add-en').value.trim();
+  const section = document.getElementById('add-section').value;
+  
+  if (!hanzi || !pinyin || !vi || !en) { alert('Vui lòng điền đủ!'); return; }
+  if (vocab.some(v => v.hanzi === hanzi)) { alert('Từ này đã có!'); return; }
+  
+  const newWord = { s: section, hanzi, pinyin, vi, en };
+  vocab.push(newWord);
+  
+  // LƯU VÀO BỘ NHỚ TRÌNH DUYỆT
+  const savedCustom = JSON.parse(localStorage.getItem('hgf_v4_custom_vocab') || '[]');
+  savedCustom.push(newWord);
+  localStorage.setItem('hgf_v4_custom_vocab', JSON.stringify(savedCustom));
+  
+  closeAddVocabModal();
+  updateVocabCount();
+  alert('Thêm từ thành công!');
+  nextQuestion();
+}
+function openVocabListModal() {
+  document.getElementById('vocab-list-modal').classList.add('open');
+  renderVocabList();
+}
+function closeVocabListModal() { document.getElementById('vocab-list-modal').classList.remove('open'); }
+
+function renderVocabList() {
+  const pool = currentSection === 'all' ? vocab : vocab.filter(v => v.s === currentSection);
+  document.getElementById('vocab-count').textContent = pool.length;
+  document.getElementById('vocab-list').innerHTML = pool.map(w => {
+    const p = wordProgress[w.hanzi];
+    let level = '📚 Chưa học';
+    if (p?.firstSeen === todayStr() && p.level < 1) level = '🆕 Mới hôm nay';
+    else if (p?.level >= 6) level = '✓ Đã thuộc';
+    else if (p?.level > 0) level = `Cấp ${p.level}/6`;
+    return `<div class="vocab-item"><div class="vocab-hanzi">${w.hanzi}</div><div class="vocab-pinyin">${w.pinyin}</div><div class="vocab-meaning">${w.vi}</div><div class="vocab-level">${level}</div></div>`;
+  }).join('');
+}
+
+function openSettingsModal() { document.getElementById('settings-modal').classList.add('open'); }
+function closeSettingsModal() { document.getElementById('settings-modal').classList.remove('open'); }
+function setGoal(n) { dailyGoal = n; updateGoalCard(); alert(`Mục tiêu: ${n} từ/ngày`); }
+function resetData() { if (confirm('Xóa tiến độ?')) { 
+    wordProgress = {}; 
+    score = 0; // Reset số câu đúng
+    total = 0; // Reset tổng số câu
+    streak = 0; // Reset ngọn lửa
+    
+    saveProgress(); 
+    saveStats();
+    updateStats();
+    updateGoalCard(); 
+    nextQuestion(); } }
+function resetAllData() { if (confirm('Xóa TẤT CẢ?')) { if (confirm('Chắc chắn?')) { localStorage.clear(); location.reload(); } } }
+function exportData() {
+  const data = { vocab, wordProgress, stats: {score, total, streak, dailyGoal} };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  a.download = `hanyu-backup-${todayStr()}.json`;
+  a.click();
+}
+function importDataPrompt() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        if (data.vocab) vocab = data.vocab.map(v => ({s: v.s||v[0], hanzi: v.hanzi||v[1], pinyin: v.pinyin||v[2], vi: v.vi||v[3], en: v.en||v[4]}));
+        if (data.wordProgress) wordProgress = data.wordProgress;
+        if (data.stats) ({score, total, streak, dailyGoal} = data.stats);
+        saveProgress();
+        updateVocabCount();
+        alert('Nhập thành công!');
+        location.reload();
+      } catch (e) { alert('Lỗi!'); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+init();
+let isPinyinVisible = localStorage.getItem('hgf_v4_pinyin') !== 'hidden';
+
+function applyPinyinState() {
+  const btn = document.getElementById('btn-pinyin');
+  const pinyinEl = document.getElementById('pinyin-display');
+  if (isPinyinVisible) {
+    btn.innerHTML = '👁️ Ẩn Pinyin';
+    pinyinEl.style.opacity = '1';
+    pinyinEl.style.visibility = 'visible';
+  } else {
+    btn.innerHTML = '🙈 Hiện Pinyin';
+    pinyinEl.style.opacity = '0';
+    pinyinEl.style.visibility = 'hidden'; 
+  }
+}
+
+function togglePinyin() {
+  isPinyinVisible = !isPinyinVisible;
+  const btn = document.getElementById('btn-pinyin');
+  const pinyinEl = document.getElementById('pinyin-display');
+  
+  if (isPinyinVisible) {
+    btn.innerHTML = '👁️ Ẩn Pinyin';
+    pinyinEl.style.opacity = '1';
+    pinyinEl.style.visibility = 'visible';
+  } else {
+    btn.innerHTML = '🙈 Hiện Pinyin';
+    // Đổi opacity thành 0 thay vì display:none để không bị giật khung hình
+    pinyinEl.style.opacity = '0';
+    pinyinEl.style.visibility = 'hidden'; 
+  }
+}
+// ==========================================
+// 📊 BIỂU ĐỒ THỐNG KÊ (CHART.JS)
+// ==========================================
+let learningChart = null;
+
+// Hàm lấy mảng 7 ngày gần nhất
+function getLast7Days() {
+  const dates = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0,10); // Format YYYY-MM-DD
+    const label = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }); // Format DD/MM
+    dates.push({ dateStr, label });
+  }
+  return dates;
+}
+
+function openStatsModal() {
+  document.getElementById('stats-modal').classList.add('open');
+  renderChart();
+}
+
+function closeStatsModal() {
+  document.getElementById('stats-modal').classList.remove('open');
+}
+
+function renderChart() {
+  const ctx = document.getElementById('learningChart').getContext('2d');
+  
+  const days = getLast7Days();
+  const labels = days.map(d => d.label);
+  const dataCounts = days.map(d => {
+    return Object.values(wordProgress).filter(p => p.firstSeen === d.dateStr).length;
+  });
+
+  const total7Days = dataCounts.reduce((a, b) => a + b, 0);
+  document.getElementById('stats-summary-text').innerHTML = `Tổng số từ mới đã nạp: <b style="color:var(--accent); font-size: 18px;">${total7Days}</b> từ`;
+
+  if (learningChart) {
+    learningChart.destroy();
+  }
+
+  learningChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Số từ mới',
+        data: dataCounts,
+        backgroundColor: 'rgba(245, 166, 35, 0.15)',
+        borderColor: '#f5a623',
+        borderWidth: 3,
+        pointBackgroundColor: getCssVar('--surface'), // Đổi theo theme
+        pointBorderColor: '#f5a623',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: getCssVar('--surface3'), // Đổi theo theme
+          titleColor: getCssVar('--text2'),
+          bodyColor: getCssVar('--text'),
+          borderColor: getCssVar('--border'),
+          borderWidth: 1,
+          displayColors: false,
+          callbacks: {
+            label: function(context) { return context.parsed.y + ' từ mới'; }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: getCssVar('--text2'), stepSize: Math.max(5, Math.ceil(Math.max(...dataCounts)/5)) }, 
+          grid: { color: getCssVar('--border') } // Đổi theo theme
+        },
+        x: {
+          ticks: { color: getCssVar('--text2') },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+// ==========================================
+// 🌞 ĐIỀU KHIỂN GIAO DIỆN SÁNG/TỐI
+// ==========================================
+function initTheme() {
+  const savedTheme = localStorage.getItem('hgf_v4_theme') || 'dark';
+  if (savedTheme === 'light') {
+    document.body.setAttribute('data-theme', 'light');
+    document.getElementById('btn-theme').innerHTML = '🌙 Giao diện Tối';
+  } else {
+    document.getElementById('btn-theme').innerHTML = '🌞 Giao diện Sáng';
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.body.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    document.body.removeAttribute('data-theme');
+    localStorage.setItem('hgf_v4_theme', 'dark');
+    document.getElementById('btn-theme').innerHTML = '🌞 Giao diện Sáng';
+  } else {
+    document.body.setAttribute('data-theme', 'light');
+    localStorage.setItem('hgf_v4_theme', 'light');
+    document.getElementById('btn-theme').innerHTML = '🌙 Giao diện Tối';
+  }
+  
+  // Nếu đang mở biểu đồ thì vẽ lại để nó ăn màu mới
+  if (document.getElementById('stats-modal').classList.contains('open')) {
+    renderChart();
+  }
+}
+
+// Lấy giá trị biến CSS hiện tại để vẽ biểu đồ cho mượt
+function getCssVar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
+// Bổ sung: Gọi hàm initTheme() ngay khi trang vừa tải
+initTheme();
+// ==========================================
+// ==========================================
+// 🔄 ĐIỀU HƯỚNG CÂU HỎI
+// ==========================================
+function goNext() {
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-prev').style.display = 'block'; // Đã có câu trước để xem
+  nextQuestion();
+}
+
+function showLastQuestion() {
+  if (!lastQuestionInfo) return;
+  document.getElementById('prev-content').innerHTML = lastQuestionInfo;
+  document.getElementById('prev-modal').classList.add('open');
+}
+
+function closeLastQuestion() {
+  document.getElementById('prev-modal').classList.remove('open');
+}
+
+// ==========================================
+// ⌨️ PHÍM TẮT BÀN PHÍM (Đã cập nhật)
+// ==========================================
+document.addEventListener('keydown', (e) => {
+  // 1. Tắt popup bằng ESC hoặc Enter
+  const openModal = document.querySelector('.modal.open');
+  if (openModal) {
+    if (e.code === 'Escape' || e.code === 'Enter') {
+      openModal.classList.remove('open');
+    }
+    return;
+  }
+
+  // 2. Các phím điều khiển
+  const options = document.querySelectorAll('.option');
+  if (e.key >= '1' && e.key <= '4') {
+    const idx = parseInt(e.key) - 1;
+    if (options[idx] && !options[idx].disabled) {
+      options[idx].click();
+    }
+  } 
+  else if (e.code === 'Space') {
+    e.preventDefault(); 
+    replay();
+  }
+  // 3. Phím Enter để "Tiếp tục"
+  else if (e.code === 'Enter') {
+    e.preventDefault();
+    const btnNext = document.getElementById('btn-next');
+    if (btnNext && btnNext.style.display === 'block') {
+      goNext();
+    }
+  }
+});
+</script>
+</body>
+</html>
