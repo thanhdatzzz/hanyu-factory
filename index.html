@@ -149,8 +149,37 @@ body {
   margin: 16px 0;
 }
 @media (max-width: 480px) {
+  /* Giữ nguyên 2 cột đáp án để tiết kiệm chiều dọc */
   .options {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 10px 0;
+  }
+  
+  /* Thu gọn viền và khoảng cách các thành phần */
+  .container { padding: 10px; }
+  .header { margin-bottom: 12px; padding-bottom: 10px; }
+  .tabs { margin-bottom: 10px; }
+  .section-tabs { margin-bottom: 10px; }
+  
+  /* Ép thẻ hiển thị chữ Hán nhỏ lại một chút */
+  .card { padding: 12px 16px; margin-bottom: 8px; }
+  .hanzi { font-size: 52px; margin: 8px 0; }
+  .pinyin-display { margin: 4px 0; }
+  
+  /* Thu nhỏ các nút bấm và chữ bên trong */
+  .option { padding: 8px; }
+  .option-main { font-size: 13px; margin-bottom: 2px; }
+  .option-sub { font-size: 11px; }
+  .feedback { margin: 8px 0; font-size: 13px; min-height: 20px; }
+  .btn { padding: 10px 12px; font-size: 13px; }
+  
+  /* Ép phần giải nghĩa (reveal) gọn lại */
+  .reveal { margin-top: 8px; font-size: 12px; }
+  .reveal > div { margin-bottom: 2px !important; }
+  .reveal > div[style*="margin-top: 12px"] { 
+    margin-top: 8px !important; 
+    padding: 8px !important; 
   }
 }
 .option {
