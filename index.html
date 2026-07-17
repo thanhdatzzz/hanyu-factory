@@ -2048,19 +2048,26 @@ function pickVocabWord(pool) {
     return !p || p.level < 6;
   });
 
+  // 👇 PHẦN LOGIC ĐÃ ĐƯỢC SỬA LẠI 👇
   if (unmasteredWords.length === 0) {
-    const totalBlocks = Math.ceil(pool.length / blockSize);
-    if (currentBlockIndex + 1 < totalBlocks) {
-      alert(`🎉 Bạn đã chinh phục Khối ${currentBlockIndex + 1}!`);
-      setCurrentBlock(currentBlockIndex + 1);
-      renderBlockSelector();
-      return pickVocabWord(pool);
+    // 1. Không tự động nhảy khối nữa, đổi trạng thái thành "Đang ôn tập"
+    document.getElementById('feedback').textContent = '🌟 Đang ôn tập khối đã hoàn thành';
+    document.getElementById('feedback').className = 'feedback ok';
+
+    // 2. Lọc ra các từ ĐÃ ĐẾN HẠN ôn tập (dựa vào thời gian SRS) trong khối này
+    const dueWords = currentBlockWords.filter(v => {
+        const p = wordProgress[v.hanzi];
+        return p && p.due <= Date.now();
+    });
+
+    // 3. Ưu tiên hỏi từ đến hạn, nếu không có thì hỏi random để tránh nhàm chán
+    if (dueWords.length > 0) {
+        return dueWords[Math.floor(Math.random() * dueWords.length)];
     } else {
-      document.getElementById('feedback').textContent = '🏆 XUẤT SẮC!';
-      document.getElementById('feedback').className = 'feedback ok';
-      return pool[Math.floor(Math.random() * pool.length)]; 
+        return currentBlockWords[Math.floor(Math.random() * currentBlockWords.length)];
     }
   }
+  // 👆 KẾT THÚC PHẦN SỬA 👆
 
   unmasteredWords.sort((a, b) => {
     const levelA = wordProgress[a.hanzi]?.level || 0;
@@ -2073,7 +2080,6 @@ function pickVocabWord(pool) {
 
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
-
 function currentPool() {
   const data = learnMode === 'sentence' ? sentences : vocab;
   
